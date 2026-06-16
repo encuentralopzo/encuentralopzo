@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control Pro Dinámico - Encuéntralo PZO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 0; background-color: #f4f6f9; color: #333;
+        }
+        .header-admin { background: #111; color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header-admin h1 { margin: 0; font-size: 24px; color: #FF5722; }
+        .header-admin p { margin: 5px 0 0 0; color: #aaa; font-size: 14px; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .tabs-navegacion { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .tab-btn {
+            padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px 8px 0 0;
+            cursor: pointer; background-color: #e0e0e0; color: #555; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .tab-btn.active { background-color: #007BFF; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.2); }
+        .tab-badge { background-color: rgba(0, 0, 0, 0.1); color: #333; padding: 2px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; }
+        .tab-btn.active .tab-badge { background-color: white; color: #007BFF; }
+        .contador-info { background: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-weight: bold; border-left: 5px solid #007BFF; }
+        .seccion-buscador-admin { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #FF5722; display: flex; flex-direction: column; gap: 6px; }
+        .seccion-buscador-admin label { font-size: 13px; font-weight: bold; color: #4b5563; }
+        .input-buscar-admin { padding: 11px 15px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; }
+        .input-buscar-admin:focus { border-color: #007BFF; box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); }
+        .panel-categorias-control { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2f5; }
+        .panel-categorias-control h3 { margin: 0 0 10px 0; font-size: 16px; color: #111; display: flex; align-items: center; gap: 6px; }
+        .wrapper-lista-categorias { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px; margin-top: 12px; }
+        .fila-categoria-gestion { display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #edf2f7; }
+        .fila-categoria-gestion input { flex: 1; padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
+        .btn-cat-mod { padding: 8px 14px; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-cat-update { background-color: #28a745; }
+        .btn-cat-delete { background-color: #dc3545; }
+        .card-negocio { background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #eef2f5; overflow: hidden; }
+        .card-header { background: #eef2f5; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; }
+        .card-header h3 { margin: 0; color: #222; font-size: 18px; }
+        .badge-alerta { background: #ffeb3b; color: #856404; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .badge-activo { background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .card-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 768px) { .card-body { grid-template-columns: 1fr; } }
+        .form-edit-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-edit-group label { font-size: 12px; font-weight: bold; color: #666; }
+        .form-edit-group input, .form-edit-group select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .seccion-categorias { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        @media (max-width: 768px) { .seccion-categorias { grid-template-columns: 1fr; } }
+        .input-with-action { display: flex; gap: 8px; align-items: center; }
+        .input-with-action input { flex: 1; }
+        .btn-ws-contacto { padding: 10px 14px; background-color: #25D366; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-flex; align-items: center; gap: 4px; }
+        .fotos-revision { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        .item-foto-editable { position: relative; width: 90px; height: 90px; }
+        .item-foto-editable img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
+        .btn-borrar-foto { position: absolute; top: -5px; right: -5px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .herramientas-fotos { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; background: #fff; padding: 12px; border: 1px dashed #007BFF; border-radius: 8px; }
+        .opcion-carga-foto { display: flex; gap: 10px; align-items: center; width: 100%; flex-wrap: wrap; }
+        .opcion-carga-foto input[type=\"text\"], .opcion-carga-foto input[type=\"file\"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box; min-width: 200px; }
+        .btn-agregar-foto { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; white-space: nowrap; }
+        .card-footer { background: #fafafa; padding: 15px 20px; text-align: right; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-aprobar { background: #007BFF; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-desactivar { background: #ff9800; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-rechazar { background: #dc3545; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        #bloqueo { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <div id="bloqueo">🔐 Cargando Panel de Seguridad...</div>
+
+    <div class="header-admin">
+        <h1>ENCUÉNTRALO PZO - PANEL CENTRAL PRO</h1>
+        <p>Gestión Inteligente • Categorías Dinámicas y Escudo Anti-Duplicados</p>
+    </div>
+
+    <div class="container">
+        <div class="tabs-navegacion">
+            <button id="tab-pendientes" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
+                📥 Solicitudes Nuevas <span id="badge-count-pendiente" class="tab-badge">...</span>
+            </button>
+            <button id="tab-activos" class="tab-btn" onclick="cambiarPestaña('activo')">
+                ✅ Comercios en la Web (Activos) <span id="badge-count-activo" class="tab-badge">...</span>
+            </button>
+        </div>
+
+        <div class="seccion-buscador-admin">
+            <label for="buscar-empresa">🔍 Buscar comercio por Nombre o RIF:</label>
+            <input type="text" id="buscar-empresa" class="input-buscar-admin" placeholder="Escribe el nombre del local o su RIF..." oninput="filtrarComerciosAlVuelo()">
+        </div>
+
+        <div class="panel-categorias-control">
+            <h3>✨ Panel de Control de Rubros Sugeridos (Moderación General)</h3>
+            <span style="font-size:12px; color:#666;">Modifica o elimina de raíz los rubros creados por los comerciantes. Los cambios afectarán en masa a todos los locales asociados.</span>
+            <div id="lista-categorias-gestion-box" class="wrapper-lista-categorias">
+                <p style="font-size:12px; color:#888; font-style:italic;">Analizando rubros en la base de datos...</p>
+            </div>
+        </div>
+
+        <div class="contador-info" id="contador-texto">Conectando...</div>
+        <div id="lista-negocios"></div>
+    </div>
+
+    <script>
+        const pinIngresado = prompt("Introduce el PIN de Admin:");
+        if (pinIngresado !== "2026") {
+            document.getElementById('bloqueo').innerHTML = "❌ ACCESO DENEGADO.";
+            throw new Error("PIN Inválido.");
+        } else { document.getElementById('bloqueo').style.display = "none"; }
+
+        const SUPABASE_URL = 'https://xhgsxguqivqmkmbphgfm.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_ttX_2zAlp3GGNAqzeLUnAA_3Za4rFSf'; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let pestañaActual = 'pendiente'; 
+        const listaContenedor = document.getElementById('lista-negocios');
+        const contadorTexto = document.getElementById('contador-texto');
+        const contenedorGestionCategorias = document.getElementById('lista-categorias-gestion-box');
+
+        let fotosPorNegocio = {};
+        let cacheNegociosDescargados = []; 
+
+        const CATEGORIAS_BASE_NOMBRES = {
+            1: "🍰 Pastelerías y Reposterías",
+            2: "🍔 Restaurantes y Comida Rápida",
+            3: "🛠️ Ferreterías y Construcción",
+            4: "🏍️ Repuestos y Mecánica",
+            5: "🛍️ Tiendas de Ropa y Calzado"
+        };
+
+        let categoriasDescubiertas = new Set();
+
+        function cambiarPestaña(tipo) {
+            pestañaActual = tipo;
+            document.getElementById('tab-pendientes').classList.toggle('active', tipo === 'pendiente');
+            document.getElementById('tab-activos').classList.toggle('active', tipo === 'activo');
+            document.getElementById('buscar-empresa').value = ''; 
+            cargarDatos();
+        }
+
+        async function escanearCategoriasExistentes() {
+            categoriasDescubiertas.clear();
+            const { data, error } = await supabaseClient
+                .from('negocios')
+                .select('categoria_nombre')
+                .not('categoria_nombre', 'is', null);
+
+            if (!error && data) {
+                data.forEach(row => {
+                    const texto = row.categoria_nombre.trim();
+                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriasDescubiertas.add(texto); }
+                });
+            }
+            renderizarModuloGestionCategorias();
+        }
+
+        function renderizarModuloGestionCategorias() {
+            if (!contenedorGestionCategorias) return;
+            if (categoriasDescubiertas.size === 0) {
+                contenedorGestionCategorias.innerHTML = "<p style='font-size:12px; color:#999; font-style:italic;'>No hay rubros personalizados sugeridos en el sistema actualmente.</p>";
+                return;
+            }
+            let listaOrdenada = Array.from(categoriasDescubiertas).sort((a,b) => a.localeCompare(b));
+            let htmlAcumulado = "";
+            listaOrdenada.forEach((nombreCat, index) => {
+                htmlAcumulado += `
+                    <div class="fila-categoria-gestion">
+                        <input type="text" id="input-global-cat-${index}" value="${nombreCat}">
+                        <button class="btn-cat-mod btn-cat-update" onclick="renombrarCategoriaGlobalInMass('${nombreCat}', ${index})">✏️ Renombrar en Masa</button>
+                        <button class="btn-cat-mod btn-cat-delete" onclick="eliminarCategoriaGlobalInMass('${nombreCat}')">🗑️ Eliminar Rubro</button>
+                    </div>
+                `;
+            });
+            contenedorGestionCategorias.innerHTML = htmlAcumulado;
+        }
+
+        async function renombrarCategoriaGlobalInMass(nombreViejo, indexInput) {
+            const nuevoNombre = document.getElementById(`input-global-cat-${indexInput}`).value.trim();
+            if (!nuevoNombre) return alert("🚨 El nombre no puede estar vacío.");
+            if (nuevoNombre === nombreViejo) return;
+            if (!confirm(`¿Renombrar "${nombreViejo}" a "${nuevoNombre}" en masa?`)) return;
+
+            await supabaseClient.from('negocios').update({ categoria_nombre: nuevoNombre }).eq('categoria_id', 99).eq('categoria_nombre', nombreViejo);
+            cargarDatos();
+        }
+
+        async function eliminarCategoriaGlobalInMass(nombreCat) {
+            if (!confirm(`🚨 ¿Eliminar rubro "${nombreCat}"? Los comercios volverán a "OTRA".`)) return;
+            await supabaseClient.from('negocios').update({ categoria_nombre: "Ninguno (Eligió del listado)" }).eq('categoria_id', 99).eq('categoria_nombre', nombreCat);
+            cargarDatos();
+        }
+
+        async function actualizarContadoresDePestañas() {
+            const { data, error } = await supabaseClient.from('negocios').select('estado');
+            if (!error && data) {
+                let p = 0, a = 0;
+                data.forEach(item => { if (item.estado === 'pendiente') p++; if (item.estado === 'activo') a++; });
+                document.getElementById('badge-count-pendiente').innerText = p;
+                document.getElementById('badge-count-activo').innerText = a;
+            }
+        }
+
+        async function cargarDatos() {
+            listaContenedor.innerHTML = "<p>Actualizando registros y escaneando categorías en Guayana...</p>";
+            await actualizarContadoresDePestañas();
+            await escanearCategoriasExistentes();
+
+            const { data: negocios, error } = await supabaseClient.from('negocios').select('*').eq('estado', pestañaActual).order('nombre_negocio', { ascending: true });
+            if (error) return contadorTexto.innerText = "Error de conexión.";
+            cacheNegociosDescargados = negocios || []; 
+            contadorTexto.innerText = pestañaActual === 'pendiente' ? `📋 Tienes (${cacheNegociosDescargados.length}) solicitudes.` : `🟢 Hay (${cacheNegociosDescargados.length}) activos.`;
+            inyectarTarjetasEnPantalla(cacheNegociosDescargados);
+        }
+
+        function filtrarComerciosAlVuelo() {
+            const termino = document.getElementById('buscar-empresa').value.toLowerCase().trim();
+            if (termino === "") return inyectarTarjetasEnPantalla(cacheNegociosDescargados);
+            const filtrados = cacheNegociosDescargados.filter(n => n.nombre_negocio.toLowerCase().includes(termino) || n.rif_o_id.toLowerCase().includes(termino));
+            inyectarTarjetasEnPantacle(filtrados);
+        }
+
+        function inyectarTarjetasEnPantalla(negocios) {
+            listaContenedor.innerHTML = "";
+            if (negocios.length === 0) { listaContenedor.innerHTML = "<p style='text-align:center; color:#666;'>No hay registros coincidentes.</p>"; return; }
+
+            negocios.forEach(negocio => {
+                let rubroSugeridoCliente = negocio.categoria_nombre || "";
+                if (rubroSugeridoCliente === "Ninguno (Eligió del listado)") rubroSugeridoCliente = "";
+                
+                let arrayOpcionesAdmin = [];
+                if (negocio.categoria_id && negocio.categoria_id !== 99) {
+                    const nombreFijo = CATEGORIAS_BASE_NOMBRES[negocio.categoria_id];
+                    if (nombreFijo) arrayOpcionesAdmin.push({ texto: nombreFijo, html: `<option value="${negocio.categoria_id}" selected>${nombreFijo}</option>` });
+                }
+                categoriasDescubiertas.forEach(nombreCat => {
+                    const esLaActual = (negocio.categoria_nombre === nombreCat);
+                    arrayOpcionesAdmin.push({ texto: nombreCat, html: `<option value="DINAMICA" ${esLaActual ? 'selected' : ''}>✨ ${nombreCat}</option>` });
+                });
+
+                arrayOpcionesAdmin.sort((a, b) => a.texto.localeCompare(b.texto));
+                let opcionesHTML = `<option value="99" ${negocio.categoria_id === 99 && !rubroSugeridoCliente ? 'selected' : ''}>⚠️ PERSONALIZADA / OTRA</option>`;
+                arrayOpcionesAdmin.forEach(opc => opcionesHTML += opc.html);
+
+                let arrayFotosOriginal = [];
+                try { arrayFotosOriginal = JSON.parse(negocio.fotos_urls || "[]"); } catch(e) { arrayFotosOriginal = []; }
+                fotosPorNegocio[negocio.id] = arrayFotosOriginal;
+
+                let botonesFooterHTML = pestañaActual === 'pendiente' 
+                    ? `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">Eliminar Permanente</button><button class="btn-aprobar" onclick="actualizarEstado(${negocio.id}, 'activo')">🚀 Aprobar</button>`
+                    : `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">Eliminar Permanente</button><button class="btn-desactivar" onclick="actualizarEstado(${negocio.id}, 'pendiente')">Pausar</button><button class="btn-aprobar" style="background:#28a745;" onclick="actualizarEstado(${negocio.id}, 'activo')">💾 Guardar</button>`;
+
+                const card = document.createElement('div');
+                card.className = 'card-negocio';
+                card.innerHTML = `
+                    <div class="card-header"><h3>${negocio.nombre_negocio}</h3></div>
+                    <div class="card-body">
+                        <div class="form-edit-group"><label>Nombre:</label><input type="text" id="edit-nombre-${negocio.id}" value="${negocio.nombre_negocio}"></div>
+                        <div class="seccion-categorias">
+                            <div class="form-edit-group"><label>Rubro Existente:</label><select id="edit-categoria-${negocio.id}" onchange="manejarCambioSelect(this, ${negocio.id})">${opcionesHTML}</select></div>
+                            <div class="form-edit-group"><label>Nuevo Rubro:</label><input type="text" id="edit-rubro-libre-${negocio.id}" value="${rubroSugeridoCliente}"></div>
+                        </div>
+                        <div class="form-edit-group" style="grid-column: 1 / -1;"><label>Tags:</label><input type="text" id="edit-tags-${negocio.id}" value="${negocio.productos_tags || ''}"></div>
+                        <div class="form-edit-group"><label>Dirección:</label><input type="text" id="edit-direccion-${negocio.id}" value="${negocio.direccion}"></div>
+                        <div class="form-edit-group"><label>Horario:</label><input type="text" id="edit-horario-${negocio.id}" value="${negocio.horario || ''}"></div>
+                        <div class="form-edit-group"><label>Maps:</label><input type="text" id="edit-maps-${negocio.id}" value="${negocio.maps || ''}"></div>
+                        <div class="form-edit-group"><label>WhatsApp:</label><input type="text" id="edit-whatsapp-${negocio.id}" value="${negocio.whatsapp}"></div>
+                        <div class="fotos-revision">
+                            <div id="grid-fotos-${negocio.id}" style="display:flex; gap:10px; flex-wrap:wrap; width:100%;"></div>
+                            <div class="herramientas-fotos">
+                                <input type="file" onchange="cargarFotoDesdePC(this, ${negocio.id})">
+                                <input type="text" id="input-nueva-foto-${negocio.id}" placeholder="URL Foto"><button onclick="agregarFotoURL(${negocio.id})">Añadir URL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">${botonesFooterHTML}</div>
+                `;
+                listaContenedor.appendChild(card);
+                renderizarFotosGrid(negocio.id);
+            });
+        }
+
+        function renderizarFotosGrid(idNegocio) {
+            const contenedorGrid = document.getElementById(`grid-fotos-${idNegocio}`);
+            if (!contenedorGrid) return; contenedorGrid.innerHTML = "";
+            (fotosPorNegocio[idNegocio] || []).forEach((url, index) => {
+                const item = document.createElement('div');
+                item.className = 'item-foto-editable';
+                item.innerHTML = `<img src="${url}"><button class="btn-borrar-foto" onclick="eliminarFotoDelAlbum(${idNegocio}, ${index})">×</button>`;
+                contenedorGrid.appendChild(item);
+            });
+        }
+
+        function cargarFotoDesdePC(inputElement, idNegocio) {
+            const archivo = inputElement.files[0]; if (!archivo) return;
+            if (fotosPorNegocio[idNegocio].length >= 6) return alert("Máximo 6 fotos.");
+            const lector = new FileReader();
+            lector.onload = function(e) { fotosPorNegocio[idNegocio].push(e.target.result); renderizarFotosGrid(idNegocio); };
+            lector.readAsDataURL(archivo);
+        }
+
+        function eliminarFotoDelAlbum(idNegocio, index) { fotosPorNegocio[idNegocio].splice(index, 1); renderizarFotosGrid(idNegocio); }
+        function agregarFotoURL(idNegocio) { const input = document.getElementById(`input-nueva-foto-${idNegocio}`); if(input.value.trim()) { fotosPorNegocio[idNegocio].push(input.value.trim()); renderizarFotosGrid(idNegocio); input.value=""; } }
+        function manejarCambioSelect(select, id) { const inputLibre = document.getElementById(`edit-rubro-libre-${id}`); if (select.value === "99") inputLibre.value = ""; else if (select.value === "DINAMICA") inputLibre.value = select.options[select.selectedIndex].text.replace("✨ ", ""); else inputLibre.value = select.options[select.selectedIndex].text; }
+
+        async function actualizarEstado(id, nuevoEstado) {
+            const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
+            let selectValue = document.getElementById(`edit-categoria-${id}`).value;
+            let tags = document.getElementById(`edit-tags-${id}`).value;
+            const direccion = document.getElementById(`edit-direccion-${id}`).value;
+            const horario = document.getElementById(`edit-horario-${id}`).value;
+            const maps = document.getElementById(`edit-maps-${id}`).value;
+            const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
+            let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
+
+            let categoriaIdFinal = 99; let categoriaNombreFinal = null;
+            if (selectValue !== "99" && selectValue !== "DINAMICA") { categoriaIdFinal = parseInt(selectValue); categoriaNombreFinal = "Ninguno (Eligió del listado)"; }
+            else { categoriaIdFinal = 99; categoriaNombreFinal = rubroLibre || null; }
+
+            if (!confirm("¿Confirmar cambios?")) return;
+            await supabaseClient.from('negocios').update({ nombre_negocio: nombre, categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal, productos_tags: tags, direccion: direccion, horario: horario, maps: maps, whatsapp: whatsapp, fotos_urls: JSON.stringify(fotosPorNegocio[id]), estado: nuevoEstado }).eq('id', id);
+            cargarDatos();
+        }
+
+        async function eliminarRegistro(id) { if (confirm("🚨 ¿Borrar permanentemente?")) { await supabaseClient.from('negocios').delete().eq('id', id); cargarDatos(); } }
+
+        cargarDatos();
+    </script>
+</body>
+</html>

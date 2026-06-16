@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encuéntralo PZO - El Directorio Comercial de Guayana</title>
+    <!-- Importamos Supabase primero -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* Estilos Generales Modernos */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f4f6f9; 
+            color: #333;
+        }
+
+        /* Cabecera Pro con tu Logo Oficial */
+        .header { 
+            background: linear-gradient(135deg, #0056b3, #00a2ff);
+            padding: 40px 20px 50px 20px; 
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .brand-logo {
+            max-width: 320px; /* Tamaño ideal para que resalte tu logo */
+            width: 100%;
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .brand-subtitle {
+            color: white;
+            font-size: 15px;
+            margin: 0;
+            opacity: 0.95;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Contenedor del Buscador Principal */
+        .search-container { 
+            margin: -25px auto 30px auto; 
+            max-width: 550px; 
+            padding: 0 20px; 
+            display: flex; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .search-input { 
+            flex: 1; 
+            padding: 16px 20px; 
+            font-size: 16px; 
+            border: none; 
+            outline: none;
+            background: white;
+        }
+
+        .search-btn { 
+            padding: 0 25px; 
+            font-size: 16px; 
+            background-color: #FF5722; /* El naranja que combina con el detalle de tu logo */
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .search-btn:hover { 
+            background-color: #e04511; 
+        }
+        
+        /* Contenedor de la Lista de Negocios y Categorías */
+        .lista-container { 
+            max-width: 800px; 
+            margin: 20px auto 40px auto; 
+            padding: 0 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            text-align: left; 
+        }
+        
+        /* Secciones Informativas con los Flyers Integrados */
+        .info-container { 
+            display: flex; 
+            justify-content: space-around; 
+            max-width: 900px; 
+            margin: 50px auto 40px auto; 
+            padding: 20px; 
+            gap: 25px; 
+            flex-wrap: wrap; 
+        }
+
+        .info-box { 
+            flex: 1;
+            min-width: 300px; 
+            border: 1px solid #eef2f5; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
+            background: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #007BFF;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        /* Estilo para ajustar tus imágenes comerciales */
+        .info-img {
+            width: 100%;
+            max-width: 380px;
+            height: auto;
+            border-radius: 8px;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .btn-registrar { 
+            display: inline-block; 
+            padding: 12px 25px; 
+            background-color: #28a745; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
+            transition: background 0.2s;
+        }
+        .btn-registrar:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+    <!-- Cabecera con tu Logo Oficial ENCUENTRALO LOGO.png -->
+    <div class="header">
+        <img src="ENCUENTRALO LOGO.png" alt="Encuéntralo PZO" class="brand-logo">
+        <p class="brand-subtitle">El directorio digital inteligente de la ciudad</p>
+    </div>
+
+    <!-- Buscador Principal tipo Barra Unificada -->
+    <div class="search-container">
+        <input type="text" id="input-busqueda" class="search-input" placeholder="¿Qué buscas? (ej: tortas, repuestos, comida...)">
+        <button id="btn-buscar" class="search-btn">Buscar</button>
+    </div>
+
+    <!-- Resultados en lista limpia (Aquí se inyectan botones de categorías y tiendas) -->
+    <div id="resultados-busqueda" class="lista-container"></div>
+
+    <!-- Secciones Informativas con tus imágenes clientes 1.jpg y NEGOCIOS 1.jpg -->
+    <div class="info-container">
+        <!-- Tarjeta para Clientes -->
+        <div class="info-box">
+            <div>
+                <h3>🔍 Para Clientes</h3>
+                <img src="clientes 1.jpg" alt="Encuentra lo que necesitas" class="info-img">
+                <p>Encuentra de forma directa los mejores comercios, horarios y datos de contacto en San Félix y Puerto Ordaz sin perder tiempo en redes.</p>
+            </div>
+        </div>
+
+        <!-- Tarjeta para Negocios -->
+        <div class="info-box">
+            <div>
+                <h3>📈 ¿Tienes un Negocio?</h3>
+                <img src="NEGOCIOS 1.jpg" alt="Publicidad para negocios" class="info-img">
+                <p>Asegura tu lugar en el gran lanzamiento de la plataforma. Digitaliza tu comercio y haz que los clientes te contacten directo a tu WhatsApp.</p>
+            </div>
+            <div>
+                <a href="registro.html" class="btn-registrar">Registra tu Comercio Aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conexión con nuestro archivo de lógica -->
+    <script src="app.js"></script>
+</body>
+</html>

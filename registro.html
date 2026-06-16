@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Comercio - Encuéntralo PZO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; background-color: #f4f6f9; color: #333;
+        }
+        .header { 
+            background: linear-gradient(135deg, #0056b3, #00a2ff);
+            padding: 30px 20px; text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
+        }
+        .brand-logo { max-width: 260px; width: 100%; height: auto; }
+        .form-container {
+            max-width: 600px; margin: 0 auto 50px auto; background: white;
+            padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eef2f5; box-sizing: border-box;
+        }
+        .form-container h2 {
+            margin-top: 0; margin-bottom: 25px; font-size: 22px; color: #222;
+            border-bottom: 2px solid #007BFF; padding-bottom: 10px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+        .form-group label { font-size: 14px; font-weight: bold; color: #4b5563; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px;
+            font-size: 15px; outline: none; font-family: inherit; box-sizing: border-box; width: 100%;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #007BFF; box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        .bloque-dinamico {
+            background-color: #f8fafc; padding: 15px; border-radius: 8px;
+            border: 1px dashed #007BFF; margin-bottom: 20px;
+        }
+        .oculto { display: none !important; }
+        .seccion-fotos-registro {
+            background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;
+        }
+        .opcion-foto-row { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+        .opcion-foto-row input[type="text"] { flex: 1; min-width: 180px; }
+        .btn-url-foto {
+            background: #4a5568; color: white; border: none; padding: 11px 16px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; white-space: nowrap;
+        }
+        .btn-url-foto:hover { background: #2d3748; }
+        .preview-fotos-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .preview-foto-item { position: relative; width: 80px; height: 80px; }
+        .preview-foto-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e0; }
+        .btn-remover-foto-preview {
+            position: absolute; top: -5px; right: -5px; background: #dc3545; color: white;
+            border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 11px;
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #FF5722, #E64A19); color: white; border: none;
+            padding: 14px 20px; font-size: 16px; font-weight: bold; border-radius: 8px;
+            cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(255,87,34,0.25); transition: all 0.2s;
+        }
+        .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(255,87,34,0.35); }
+        .btn-submit:disabled { background: #999 !important; box-shadow: none !important; cursor: not-allowed; }
+        .link-retorno { text-align: center; margin-top: 20px; }
+        .link-retorno a { color: #007BFF; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .link-retorno a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html">
+            <img src="ENCUENTRALO LOGO.png" alt="Encuéntralo PZO" class="brand-logo">
+        </a>
+    </div>
+
+    <div class="form-container">
+        <h2>📝 Inscribir Nuevo Comercio</h2>
+        
+        <form id="formulario-registro">
+            <div class="form-group">
+                <label for="nombre_negocio">🏢 Nombre del Local o Marca Comercial:</label>
+                <input type="text" id="nombre_negocio" placeholder="Ej: Pastelitos El Sol, Repuestos Guayana..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="rif_o_id">🆔 Número de RIF o Cédula de Identidad:</label>
+                <input type="text" id="rif_o_id" placeholder="Ej: J-12345678-0 o V-12345678" required>
+            </div>
+
+            <div class="form-group">
+                <label for="categoria">📂 Seleccionar Rubro de Actividad:</label>
+                <select id="categoria" required></select>
+            </div>
+
+            <div id="bloque-nueva-categoria" class="form-group bloque-dinamico oculto">
+                <label for="nueva_categoria_texto">💡 Propón el Nombre de tu Rubro:</label>
+                <input type="text" id="nueva_categoria_texto" placeholder="Ej: Heladerías, Farmacias, Barberías...">
+            </div>
+
+            <div class="form-group">
+                <label for="productos_tags">🔍 Productos / Servicios / Tags (Separados por comas):</label>
+                <textarea id="productos_tags" rows="2" placeholder="Ej: tortas, ponqués, café, repuestos... " required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="direccion">📍 Dirección Física Resumida (Ciudad Guayana):</label>
+                <input type="text" id="direccion" placeholder="Ej: CC Alta Vista II, Puerto Ordaz" required>
+            </div>
+
+            <div class="form-group">
+                <label for="horario">🕒 Horarios de Trabajo al Público:</label>
+                <input type="text" id="horario" placeholder="Ej: Lun a Sáb: 8:00 AM - 6:00 PM">
+            </div>
+
+            <div class="form-group">
+                <label for="maps">🗺️ Enlace de Coordenadas Google Maps (Opcional):</label>
+                <input type="url" id="maps" placeholder="http://maps.google.com/...">
+            </div>
+
+            <div class="form-group">
+                <label for="instagram">📸 Nombre de Usuario de Instagram (Opcional):</label>
+                <input type="text" id="instagram" placeholder="Ej: @tu_comercio">
+            </div>
+
+            <div class="form-group">
+                <label for="whatsapp">💬 Número de WhatsApp Comercial (Con código de área):</label>
+                <input type="text" id="whatsapp" placeholder="Ej: 584141234567" required>
+            </div>
+
+            <div class="seccion-fotos-registro">
+                <label style="font-size: 14px; font-weight: bold; color: #4b5563; display: block; margin-bottom: 5px;">📸 Álbum de Fotos del Comercio (Hace brillar tu marca):</label>
+                
+                <label style="font-size: 12px; font-weight: bold; color: #007BFF; display: block;">📂 Subir archivo local:</label>
+                <input type="file" id="registro-file-fotos" accept="image/*" style="padding: 5px 0;">
+
+                <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-top: 10px;">🔗 O pega un enlace URL externo:</label>
+                <div class="opcion-foto-row">
+                    <input type="text" id="registro-url-foto" placeholder="https://sitio.com/imagen.jpg">
+                    <button type="button" class="btn-url-foto" onclick="agregarFotoPorUrlDirecta()">Añadir Enlace</button>
+                </div>
+
+                <div id="contenedor-previews-registro" class="preview-fotos-container"></div>
+            </div>
+
+            <button type="submit" id="boton-submit" class="btn-submit">🚀 Enviar Solicitud de Inscripción</button>
+        </form>
+
+        <div class="link-retorno">
+            <a href="index.html">⬅️ Volver al Inicio Comercial</a>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xhgsxguqivqmkmbphgfm.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_ttX_2zAlp3GGNAqzeLUnAA_3Za4rFSf'; 
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const selectCategoria = document.getElementById('categoria');
+        const bloqueNuevaCat = document.getElementById('bloque-nueva-categoria');
+        const inputNuevaCat = document.getElementById('nueva_categoria_texto');
+        const formulario = document.getElementById('formulario-registro');
+        const botonSubmit = document.getElementById('boton-submit');
+
+        let fotosDelAlbumCargadas = [];
+
+        const CATEGORIAS_BASE_NOMBRES = {
+            1: "🍰 Pastelerías y Reposterías",
+            2: "🍔 Restaurantes y Comida Rápida",
+            3: "🛠️ Ferreterías y Construcción",
+            4: "🏍️ Repuestos y Mecánica",
+            5: "🛍️ Tiendas de Ropa y Calzado"
+        };
+
+        async function sincronizarRubrosOpciones() {
+            try {
+                let arrayTemporalParaOrdenar = [];
+                const descubiertas = new Set();
+
+                const { data, error } = await supabaseClient
+                    .from('negocios')
+                    .select('categoria_id, categoria_nombre');
+
+                if (!error && data) {
+                    data.forEach(row => {
+                        if (row.categoria_id && row.categoria_id !== 99) {
+                            const nombreRaiz = CATEGORIAS_BASE_NOMBRES[row.categoria_id];
+                            if (nombreRaiz && !descubiertas.has(nombreRaiz.toLowerCase())) {
+                                descubiertas.add(nombreRaiz.toLowerCase());
+                                arrayTemporalParaOrdenar.push({ valor: row.categoria_id.toString(), texto: nombreRaiz });
+                            }
+                        } else if (row.categoria_nombre) {
+                            const t = row.categoria_nombre.trim();
+                            if (t !== "" && t !== "Ninguno (Eligió del listado)" && !descubiertas.has(t.toLowerCase())) {
+                                descubiertas.add(t.toLowerCase());
+                                arrayTemporalParaOrdenar.push({ valor: `DINAMICA:${t}`, texto: `✨ ${t}` });
+                            }
+                        }
+                    });
+                }
+
+                arrayTemporalParaOrdenar.sort((a, b) => {
+                    const limpioA = a.texto.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]/g, "").trim().toLowerCase();
+                    const limpioB = b.texto.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]/g, "").trim().toLowerCase();
+                    return limpioA.localeCompare(limpioB);
+                });
+
+                let htmlOpciones = `<option value="" disabled selected>-- Elige una opción comercial --</option>`;
+                arrayTemporalParaOrdenar.forEach(opcion => {
+                    htmlOpciones += `<option value="${opcion.valor}">${opcion.texto}</option>`;
+                });
+
+                htmlOpciones += `<option value="OTRA">⚠️ MI RUBRO NO APARECE (SUGERIR NUEVO)</option>`;
+                selectCategoria.innerHTML = htmlOpciones;
+            } catch(e) { console.error(e); }
+        }
+
+        selectCategoria.addEventListener('change', function() {
+            if (this.value === 'OTRA') {
+                bloqueNuevaCat.classList.remove('oculto');
+                inputNuevaCat.setAttribute('required', 'required');
+            } else {
+                bloqueNuevaCat.classList.add('oculto');
+                inputNuevaCat.removeAttribute('required');
+                inputNuevaCat.value = "";
+            }
+        });
+
+        const inputFile = document.getElementById('registro-file-fotos');
+        const inputUrl = document.getElementById('registro-url-foto');
+        const contenedorPreviews = document.getElementById('contenedor-previews-registro');
+
+        inputFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+            if (fotosDelAlbumCargadas.length >= 6) {
+                alert("🚨 Límite de 6 fotos alcanzado.");
+                inputFile.value = "";
+                return;
+            }
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                fotosDelAlbumCargadas.push(e.target.result);
+                renderizarMiniaturas();
+                inputFile.value = "";
+            };
+            lector.readAsDataURL(file);
+        });
+
+        function agregarFotoPorUrlDirecta() {
+            const urlValue = inputUrl.value.trim();
+            if (urlValue === "") return;
+            if (fotosDelAlbumCargadas.length >= 6) {
+                alert("🚨 Límite de 6 fotos alcanzado.");
+                return;
+            }
+            fotosDelAlbumCargadas.push(urlValue);
+            renderizarMiniaturas();
+            inputUrl.value = "";
+        }
+
+        function renderizarMiniaturas() {
+            contenedorPreviews.innerHTML = "";
+            fotosDelAlbumCargadas.forEach((url, index) => {
+                const item = document.createElement('div');
+                item.className = 'preview-foto-item';
+                item.innerHTML = `
+                    <img src="${url}">
+                    <button type="button" class="btn-remover-foto-preview" onclick="removerFotoDelAlbum(${index})">×</button>
+                `;
+                contenedorPreviews.appendChild(item);
+            });
+        }
+
+        function removerFotoDelAlbum(index) {
+            fotosDelAlbumCargadas.splice(index, 1);
+            renderizarMiniaturas();
+        }
+
+        formulario.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const textoOriginal = botonSubmit.innerText;
+            botonSubmit.innerText = "⏳ Procesando Inscripción Oficial...";
+            botonSubmit.disabled = true;
+
+            const nombre = document.getElementById('nombre_negocio').value.trim();
+            const rif = document.getElementById('rif_o_id').value.trim();
+            const valorSelect = selectCategoria.value;
+            const rubroSugeridoTexto = inputNuevaCat.value.trim();
+            const tags = document.getElementById('productos_tags').value.trim();
+            const direccion = document.getElementById('direccion').value.trim();
+            const horario = document.getElementById('horario').value.trim();
+            const maps = document.getElementById('maps').value.trim();
+            const instagram = document.getElementById('instagram').value.trim();
+            const whatsapp = document.getElementById('whatsapp').value.replace(/\s+/g, '').replace(/\+/g, '');
+
+            let categoriaIdFinal = 99;
+            let categoriaNombreFinal = null;
+
+            if (valorSelect === 'OTRA') {
+                categoriaIdFinal = 99;
+                categoriaNombreFinal = rubroSugeridoTexto;
+            } else if (valorSelect.startsWith('DINAMICA:')) {
+                categoriaIdFinal = 99;
+                categoriaNombreFinal = valorSelect.replace('DINAMICA:', '');
+            } else {
+                categoriaIdFinal = parseInt(valorSelect);
+                categoriaNombreFinal = "Ninguno (Eligió del listado)";
+            }
+
+            try {
+                const stringJSONFotos = JSON.stringify(fotosDelAlbumCargadas);
+                const { error } = await supabaseClient
+                    .from('negocios')
+                    .insert([{
+                        nombre_negocio: nombre, rif_o_id: rif,
+                        categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal,
+                        productos_tags: tags, direccion: direccion, maps: maps,
+                        horario: horario, whatsapp: whatsapp, instagram: instagram,
+                        fotos_urls: stringJSONFotos, estado: 'pendiente'
+                    }]);
+
+                if (error) throw error;
+
+                alert(`🎉 ¡Inscripción enviada con éxito!\n\nEl comercio "${nombre}" ha entrado en revisión.`);
+                formulario.reset();
+                bloqueNuevaCat.classList.add('oculto');
+                fotosDelAlbumCargadas = [];
+                renderizarMiniaturas();
+                sincronizarRubrosOpciones();
+            } catch (err) {
+                alert("❌ Error al procesar: " + err.message);
+            } finally {
+                botonSubmit.innerText = textoOriginal;
+                botonSubmit.disabled = false;
+            }
+        });
+
+        sincronizarRubrosOpciones();
+    </script>
+</body>
+</html>
