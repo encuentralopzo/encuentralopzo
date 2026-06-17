@@ -69,7 +69,6 @@ function mostrarArbolCategoriasDisponibles() {
         mapaContador[nombreRubro] = (mapaContador[nombreRubro] || 0) + 1;
     });
 
-    // Se inyecta la cabecera idéntica a tu captura horizontal original con el botón de Promociones al lado
     let htmlBotones = `
         <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; flex-wrap: wrap;">
             <span style="font-weight: bold; color: #444; font-size: 15px;">Explora por categorías:</span>
@@ -180,7 +179,7 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     contenedorComercios.innerHTML = htmlTarjetas;
 }
 
-// 🎯 PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA EL FORMATO EXACTO SOLICITADO
+// PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA EL FORMATO EXACTO SOLICITADO
 function cargarPantallaSoloPromociones() {
     const localesConOferta = todosLosNegociosActivos.filter(n => n.promocion_texto && n.promocion_texto.trim() !== "");
 
@@ -199,7 +198,6 @@ function cargarPantallaSoloPromociones() {
     }
 
     localesConOferta.forEach(local => {
-        // Estructura exacta requerida: NOMBRE EMPRESA – PROMOCION y LINK DEL PERFIL
         htmlPromos += `
             <div style="background: white; border-radius: 10px; border: 1px dashed #dc3545; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px;">
                 <div style="font-size: 14px; line-height: 1.5; color: #222;">
@@ -216,9 +214,7 @@ function cargarPantallaSoloPromociones() {
     contenedorComercios.innerHTML = htmlPromos;
 }
 
-// Oyentes de Eventos para el buscador unificado
 inputBusqueda.addEventListener('input', ejecutarFiltroBuscadorGeneral);
 btnBuscar.addEventListener('click', ejecutarFiltroBuscadorGeneral);
 
-// Arranque de automatización al abrir la web
 inicializarInterfaz();
