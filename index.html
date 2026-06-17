@@ -9,7 +9,7 @@
     <style>
         /* Estilos Generales Modernos */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; \
             margin: 0; 
             padding: 0; 
             background-color: #f4f6f9; 
@@ -25,7 +25,7 @@
         }
 
         .brand-logo {
-            max-width: 320px; /* Tamaño ideal para que resalte tu logo */
+            max-width: 320px; 
             width: 100%;
             height: auto;
             margin-bottom: 5px;
@@ -42,7 +42,7 @@
         /* Buscador Principal tipo Barra Unificada */
         .search-container { 
             max-width: 550px; 
-            margin: -24px auto 30px auto; /* Flota sutilmente sobre la cabecera */
+            margin: -24px auto 30px auto; 
             padding: 0 20px;
             display: flex;
             gap: 8px;
@@ -87,7 +87,7 @@
             box-sizing: border-box;
         }
 
-        /* Secciones Informativas con tus imágenes clientes 1.jpg y NEGOCIOS 1.jpg */
+        /* Secciones Informativas Reparadas */
         .info-container {
             max-width: 900px;
             margin: 50px auto 60px auto;
@@ -115,12 +115,15 @@
 
         .info-box h3 { margin: 0 0 15px 0; color: #222; font-size: 18px; }
         
+        /* 🔥 SOLUCIÓN IMÁGENES COMPLETAS: Removida la altura restrictiva */
         .info-img { 
             width: 100%; 
-            max-height: 160px; 
-            object-fit: cover; 
+            height: auto; 
+            max-height: 240px; 
+            object-fit: contain; 
             border-radius: 8px; 
             margin-bottom: 15px; 
+            background-color: #fafafa;
         }
 
         .info-box p { 

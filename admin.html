@@ -121,7 +121,7 @@
             5: "🛍️ Tiendas de Ropa y Calzado"
         };
 
-        let categoriasDescubiertas = new Set();
+        let categoriesDescubiertas = new Set();
 
         function cambiarPestaña(tipo) {
             pestañaActual = tipo;
@@ -132,7 +132,7 @@
         }
 
         async function escanearCategoriasExistentes() {
-            categoriasDescubiertas.clear();
+            categoriesDescubiertas.clear();
             const { data, error } = await supabaseClient
                 .from('negocios')
                 .select('categoria_nombre')
@@ -141,7 +141,7 @@
             if (!error && data) {
                 data.forEach(row => {
                     const texto = row.categoria_nombre.trim();
-                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriasDescubiertas.add(texto); }
+                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriesDescubiertas.add(texto); }
                 });
             }
             renderizarModuloGestionCategorias();
@@ -149,11 +149,11 @@
 
         function renderizarModuloGestionCategorias() {
             if (!contenedorGestionCategorias) return;
-            if (categoriasDescubiertas.size === 0) {
+            if (categoriesDescubiertas.size === 0) {
                 contenedorGestionCategorias.innerHTML = "<p style='font-size:12px; color:#999; font-style:italic;'>No hay rubros personalizados sugeridos en el sistema actualmente.</p>";
                 return;
             }
-            let listaOrdenada = Array.from(categoriasDescubiertas).sort((a,b) => a.localeCompare(b));
+            let listaOrdenada = Array.from(categoriesDescubiertas).sort((a,b) => a.localeCompare(b));
             let htmlAcumulado = "";
             listaOrdenada.forEach((nombreCat, index) => {
                 htmlAcumulado += `
@@ -225,7 +225,7 @@
                     const nombreFijo = CATEGORIAS_BASE_NOMBRES[negocio.categoria_id];
                     if (nombreFijo) arrayOpcionesAdmin.push({ texto: nombreFijo, html: `<option value="${negocio.categoria_id}" selected>${nombreFijo}</option>` });
                 }
-                categoriasDescubiertas.forEach(nombreCat => {
+                categoriesDescubiertas.forEach(nombreCat => {
                     const esLaActual = (negocio.categoria_nombre === nombreCat);
                     arrayOpcionesAdmin.push({ texto: nombreCat, html: `<option value="DINAMICA" ${esLaActual ? 'selected' : ''}>✨ ${nombreCat}</option>` });
                 });
@@ -302,18 +302,18 @@
         function manejarCambioSelect(select, id) { const inputLibre = document.getElementById(`edit-rubro-libre-${id}`); if (select.value === "99") inputLibre.value = ""; else if (select.value === "DINAMICA") inputLibre.value = select.options[select.selectedIndex].text.replace("✨ ", ""); else inputLibre.value = select.options[select.selectedIndex].text; }
 
         async function actualizarEstado(id, nuevoEstado) {
-            const nombre = document.getElementById('edit-nombre-' + id).value.trim();
-            let selectValue = document.getElementById('edit-categoria-' + id).value;
-            let tags = document.getElementById('edit-tags-' + id).value;
+            const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
+            let selectValue = document.getElementById(`edit-categoria-${id}`).value;
+            let tags = document.getElementById(`edit-tags-${id}`).value;
             
-            // 🎯 CAPTURA SINCRONIZADA CON EL ID DE ARRIBA
-            let promoTexto = document.getElementById('edit-promocion-' + id).value.trim();
+            // 🎯 LECTURA DE ID CORREGIDA CON COMILLAS INVERTIDAS DE JAVASCRIPT
+            let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
             
-            const direccion = document.getElementById('edit-direccion-' + id).value;
-            const horario = document.getElementById('edit-horario-' + id).value;
-            const maps = document.getElementById('edit-maps-' + id).value;
-            const whatsapp = document.getElementById('edit-whatsapp-' + id).value.replace(/\s+/g, '');
-            let rubroLibre = document.getElementById('edit-rubro-libre-' + id).value.trim();
+            const direccion = document.getElementById(`edit-direccion-${id}`).value;
+            const horario = document.getElementById(`edit-horario-${id}`).value;
+            const maps = document.getElementById(`edit-maps-${id}`).value;
+            const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
+            let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
 
             let categoriaIdFinal = 99; let categoriaNombreFinal = null;
             if (selectValue !== "99" && selectValue !== "DINAMICA") { categoriaIdFinal = parseInt(selectValue); categoriaNombreFinal = "Ninguno (Eligió del listado)"; }
@@ -321,7 +321,6 @@
 
             if (!confirm("¿Confirmar cambios?")) return;
             
-            // Envío directo a la columna oficial
             const { error } = await supabaseClient.from('negocios').update({ 
                 nombre_negocio: nombre, 
                 categoria_id: categoriaIdFinal, 
