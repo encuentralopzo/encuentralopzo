@@ -121,7 +121,7 @@
             5: "🛍️ Tiendas de Ropa y Calzado"
         };
 
-        let categoriesDescubiertas = new Set();
+        let categoriasDescubiertas = new Set();
 
         function cambiarPestaña(tipo) {
             pestañaActual = tipo;
@@ -132,7 +132,7 @@
         }
 
         async function escanearCategoriasExistentes() {
-            categoriesDescubiertas.clear();
+            categoriasDescubiertas.clear();
             const { data, error } = await supabaseClient
                 .from('negocios')
                 .select('categoria_nombre')
@@ -141,7 +141,7 @@
             if (!error && data) {
                 data.forEach(row => {
                     const texto = row.categoria_nombre.trim();
-                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriesDescubiertas.add(texto); }
+                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriasDescubiertas.add(texto); }
                 });
             }
             renderizarModuloGestionCategorias();
@@ -149,11 +149,11 @@
 
         function renderizarModuloGestionCategorias() {
             if (!contenedorGestionCategorias) return;
-            if (categoriesDescubiertas.size === 0) {
+            if (categoriasDescubiertas.size === 0) {
                 contenedorGestionCategorias.innerHTML = "<p style='font-size:12px; color:#999; font-style:italic;'>No hay rubros personalizados sugeridos en el sistema actualmente.</p>";
                 return;
             }
-            let listaOrdenada = Array.from(categoriesDescubiertas).sort((a,b) => a.localeCompare(b));
+            let listaOrdenada = Array.from(categoriasDescubiertas).sort((a,b) => a.localeCompare(b));
             let htmlAcumulado = "";
             listaOrdenada.forEach((nombreCat, index) => {
                 htmlAcumulado += `
@@ -225,7 +225,7 @@
                     const nombreFijo = CATEGORIAS_BASE_NOMBRES[negocio.categoria_id];
                     if (nombreFijo) arrayOpcionesAdmin.push({ texto: nombreFijo, html: `<option value="${negocio.categoria_id}" selected>${nombreFijo}</option>` });
                 }
-                categoriesDescubiertas.forEach(nombreCat => {
+                categoriasDescubiertas.forEach(nombreCat => {
                     const esLaActual = (negocio.categoria_nombre === nombreCat);
                     arrayOpcionesAdmin.push({ texto: nombreCat, html: `<option value="DINAMICA" ${esLaActual ? 'selected' : ''}>✨ ${nombreCat}</option>` });
                 });
@@ -306,7 +306,7 @@
             let selectValue = document.getElementById(`edit-categoria-${id}`).value;
             let tags = document.getElementById(`edit-tags-${id}`).value;
             
-            // 🎯 LECTURA DE ID CORREGIDA CON COMILLAS INVERTIDAS DE JAVASCRIPT
+            // 🎯 LECTURA DINÁMICA PERFECTA DE LA PROMOCIÓN
             let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
             
             const direccion = document.getElementById(`edit-direccion-${id}`).value;
@@ -321,12 +321,13 @@
 
             if (!confirm("¿Confirmar cambios?")) return;
             
+            // 🎯 INYECCIÓN DE LA COLUMNA DE PROMOCIONES ADENTRO DEL PAYLOAD DE ACTUALIZACIÓN
             const { error } = await supabaseClient.from('negocios').update({ 
                 nombre_negocio: nombre, 
                 categoria_id: categoriaIdFinal, 
                 categoria_nombre: categoriaNombreFinal, 
                 productos_tags: tags, 
-                promocion_texto: promoTexto || null, 
+                promocion_texto: promoTexto || null, // <- Aquí viaja seguro a tu columna 'promocion_texto'
                 direccion: direccion, 
                 horario: horario, 
                 maps: maps, 
@@ -338,7 +339,23 @@
             if (error) {
                 alert("❌ Error en Supabase: " + error.message);
             } else {
-                cargarDatos();
+                alert("✅ ¡Cambios guardados con éxito en la base de datos de Guayana!");
+                
+                // 🎯 SINCRONIZACIÓN INMEDIATA DE LA CACHÉ:
+                // Actualizamos la memoria del navegador al vuelo antes de redibujar para que la cajita no aparezca vacía
+                const indiceLocal = cacheNegociosDescargados.findIndex(n => n.id === id);
+                if (indiceLocal !== -1) {
+                    cacheNegociosDescargados[indiceLocal].promocion_texto = promoTexto;
+                    cacheNegociosDescargados[indiceLocal].nombre_negocio = nombre;
+                    cacheNegociosDescargados[indiceLocal].productos_tags = tags;
+                    cacheNegociosDescargados[indiceLocal].direccion = direccion;
+                    cacheNegociosDescargados[indiceLocal].horario = horario;
+                    cacheNegociosDescargados[indiceLocal].maps = maps;
+                    cacheNegociosDescargados[indiceLocal].whatsapp = whatsapp;
+                }
+                
+                // Volvemos a pintar la interfaz con la memoria fresca
+                inyectarTarjetasEnPantalla(cacheNegociosDescargados);
             }
         }
 

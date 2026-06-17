@@ -7,145 +7,32 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* Estilos Generales Modernos */
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; \
-            margin: 0; 
-            padding: 0; 
-            background-color: #f4f6f9; 
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; padding: 0; background-color: #f4f6f9; color: #333;
         }
-
-        /* Cabecera Pro con tu Logo Oficial */
         .header { 
             background: linear-gradient(135deg, #0056b3, #00a2ff);
-            padding: 40px 20px 50px 20px; 
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 40px 20px 50px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        .brand-logo {
-            max-width: 320px; 
-            width: 100%;
-            height: auto;
-            margin-bottom: 5px;
-        }
-
-        .brand-subtitle { 
-            margin: 0; 
-            color: rgba(255, 255, 255, 0.9); 
-            font-size: 15px; 
-            font-weight: 500;
-            letter-spacing: 0.5px;
-        }
-
-        /* Buscador Principal tipo Barra Unificada */
-        .search-container { 
-            max-width: 550px; 
-            margin: -24px auto 30px auto; 
-            padding: 0 20px;
-            display: flex;
-            gap: 8px;
-        }
-
-        .search-input { 
-            flex: 1; 
-            padding: 14px 20px; 
-            border: none; 
-            border-radius: 30px; 
-            font-size: 15px; 
-            outline: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            box-sizing: border-box;
-            transition: all 0.3s;
-        }
-
-        .search-input:focus {
-            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.15);
-        }
-
-        .search-btn { 
-            padding: 14px 28px; 
-            background-color: #333; 
-            color: white; 
-            border: none; 
-            border-radius: 30px; 
-            font-weight: bold; 
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            font-size: 14px;
-            transition: background 0.2s;
-        }
-
+        .brand-logo { max-width: 320px; width: 100%; height: auto; margin-bottom: 5px; }
+        .brand-subtitle { margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 15px; font-weight: 500; letter-spacing: 0.5px; }
+        .search-container { max-width: 550px; margin: -24px auto 30px auto; padding: 0 20px; display: flex; gap: 8px; }
+        .search-input { flex: 1; padding: 14px 20px; border: none; border-radius: 30px; font-size: 15px; outline: none; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-box; transition: all 0.3s; }
+        .search-input:focus { box-shadow: 0 4px 20px rgba(0, 86, 179, 0.15); }
+        .search-btn { padding: 14px 28px; background-color: #333; color: white; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: 14px; transition: background 0.2s; }
         .search-btn:hover { background-color: #111; }
-
-        /* Contenedor de Listas (Categorías y Comercios) */
-        .lista-container { 
-            max-width: 550px; 
-            margin: 0 auto; 
-            padding: 0 20px; 
-            box-sizing: border-box;
-        }
-
-        /* Secciones Informativas Reparadas */
-        .info-container {
-            max-width: 900px;
-            margin: 50px auto 60px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        @media (max-width: 768px) {
-            .info-container { grid-template-columns: 1fr; margin: 40px auto; }
-        }
-
-        .info-box {
-            background: white;
-            border-radius: 14px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            border: 1px solid #eef2f5;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            text-align: center;
-        }
-
+        .lista-container { max-width: 550px; margin: 0 auto; padding: 0 20px; box-sizing: border-box; }
+        .info-container { max-width: 900px; margin: 50px auto 60px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        @media (max-width: 768px) { .info-container { grid-template-columns: 1fr; margin: 40px auto; } }
+        .info-box { background: white; border-radius: 14px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #eef2f5; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
         .info-box h3 { margin: 0 0 15px 0; color: #222; font-size: 18px; }
         
-        /* 🔥 SOLUCIÓN IMÁGENES COMPLETAS: Removida la altura restrictiva */
-        .info-img { 
-            width: 100%; 
-            height: auto; 
-            max-height: 240px; 
-            object-fit: contain; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            background-color: #fafafa;
-        }
-
-        .info-box p { 
-            font-size: 14px; 
-            color: #666; 
-            line-height: 1.5; 
-            margin: 0 0 20px 0; 
-        }
-
-        .btn-registrar {
-            display: inline-block;
-            background: linear-gradient(135deg, #28a745, #218838);
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
-            transition: transform 0.2s;
-        }
-
+        /* Mantenido el tamaño grande, proporcional y expandido sin cortes */
+        .info-img { width: 100%; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+        
+        .info-box p { font-size: 14px; color: #666; line-height: 1.5; margin: 0 0 20px 0; }
+        .btn-registrar { display: inline-block; background: linear-gradient(135deg, #28a745, #218838); color: white; padding: 12px 24px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2); transition: transform 0.2s; }
         .btn-registrar:hover { transform: translateY(-1px); }
     </style>
 </head>
