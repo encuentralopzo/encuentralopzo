@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Encuéntralo PZO - El Directorio Comercial de Guayana</title>
-    <!-- Importamos Supabase primero -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -32,144 +31,136 @@
             margin-bottom: 5px;
         }
 
-        .brand-subtitle {
-            color: white;
-            font-size: 15px;
-            margin: 0;
-            opacity: 0.95;
-            font-weight: bold;
+        .brand-subtitle { 
+            margin: 0; 
+            color: rgba(255, 255, 255, 0.9); 
+            font-size: 15px; 
+            font-weight: 500;
             letter-spacing: 0.5px;
         }
-        
-        /* Contenedor del Buscador Principal */
+
+        /* Buscador Principal tipo Barra Unificada */
         .search-container { 
-            margin: -25px auto 30px auto; 
             max-width: 550px; 
-            padding: 0 20px; 
-            display: flex; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border-radius: 30px;
-            overflow: hidden;
+            margin: -24px auto 30px auto; /* Flota sutilmente sobre la cabecera */
+            padding: 0 20px;
+            display: flex;
+            gap: 8px;
         }
 
         .search-input { 
             flex: 1; 
-            padding: 16px 20px; 
-            font-size: 16px; 
+            padding: 14px 20px; 
             border: none; 
+            border-radius: 30px; 
+            font-size: 15px; 
             outline: none;
-            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.15);
         }
 
         .search-btn { 
-            padding: 0 25px; 
-            font-size: 16px; 
-            background-color: #FF5722; /* El naranja que combina con el detalle de tu logo */
+            padding: 14px 28px; 
+            background-color: #333; 
             color: white; 
             border: none; 
-            cursor: pointer; 
-            font-weight: bold;
-            transition: background 0.3s ease;
+            border-radius: 30px; 
+            font-weight: bold; 
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            font-size: 14px;
+            transition: background 0.2s;
         }
 
-        .search-btn:hover { 
-            background-color: #e04511; 
-        }
-        
-        /* Contenedor de la Lista de Negocios y Categorías */
+        .search-btn:hover { background-color: #111; }
+
+        /* Contenedor de Listas (Categorías y Comercios) */
         .lista-container { 
-            max-width: 800px; 
-            margin: 20px auto 40px auto; 
+            max-width: 550px; 
+            margin: 0 auto; 
             padding: 0 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
-            text-align: left; 
-        }
-        
-        /* Secciones Informativas con los Flyers Integrados */
-        .info-container { 
-            display: flex; 
-            justify-content: space-around; 
-            max-width: 900px; 
-            margin: 50px auto 40px auto; 
-            padding: 20px; 
-            gap: 25px; 
-            flex-wrap: wrap; 
+            box-sizing: border-box;
         }
 
-        .info-box { 
-            flex: 1;
-            min-width: 300px; 
-            border: 1px solid #eef2f5; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
+        /* Secciones Informativas con tus imágenes clientes 1.jpg y NEGOCIOS 1.jpg */
+        .info-container {
+            max-width: 900px;
+            margin: 50px auto 60px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .info-container { grid-template-columns: 1fr; margin: 40px auto; }
+        }
+
+        .info-box {
             background: white;
-            text-align: center;
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f5;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            text-align: center;
         }
 
-        .info-box h3 {
-            margin-top: 0;
-            color: #007BFF;
-            font-size: 20px;
-            margin-bottom: 15px;
+        .info-box h3 { margin: 0 0 15px 0; color: #222; font-size: 18px; }
+        
+        .info-img { 
+            width: 100%; 
+            max-height: 160px; 
+            object-fit: cover; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
         }
 
-        /* Estilo para ajustar tus imágenes comerciales */
-        .info-img {
-            width: 100%;
-            max-width: 380px;
-            height: auto;
-            border-radius: 8px;
-            margin: 0 auto 15px auto;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .info-box p { 
+            font-size: 14px; 
+            color: #666; 
+            line-height: 1.5; 
+            margin: 0 0 20px 0; 
         }
 
-        .info-box p {
-            font-size: 14px;
-            color: #555;
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-
-        .btn-registrar { 
-            display: inline-block; 
-            padding: 12px 25px; 
-            background-color: #28a745; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 6px; 
+        .btn-registrar {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 30px;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(40, 167, 69, 0.2);
-            transition: background 0.2s;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+            transition: transform 0.2s;
         }
-        .btn-registrar:hover { background-color: #218838; }
+
+        .btn-registrar:hover { transform: translateY(-1px); }
     </style>
 </head>
 <body>
 
-    <!-- Cabecera con tu Logo Oficial ENCUENTRALO LOGO.png -->
     <div class="header">
         <img src="ENCUENTRALO LOGO.png" alt="Encuéntralo PZO" class="brand-logo">
         <p class="brand-subtitle">El directorio digital inteligente de la ciudad</p>
     </div>
 
-    <!-- Buscador Principal tipo Barra Unificada -->
     <div class="search-container">
         <input type="text" id="input-busqueda" class="search-input" placeholder="¿Qué buscas? (ej: tortas, repuestos, comida...)">
         <button id="btn-buscar" class="search-btn">Buscar</button>
     </div>
 
-    <!-- Resultados en lista limpia (Aquí se inyectan botones de categorías y tiendas) -->
     <div id="resultados-busqueda" class="lista-container"></div>
 
-    <!-- Secciones Informativas con tus imágenes clientes 1.jpg y NEGOCIOS 1.jpg -->
     <div class="info-container">
-        <!-- Tarjeta para Clientes -->
         <div class="info-box">
             <div>
                 <h3>🔍 Para Clientes</h3>
@@ -178,7 +169,6 @@
             </div>
         </div>
 
-        <!-- Tarjeta para Negocios -->
         <div class="info-box">
             <div>
                 <h3>📈 ¿Tienes un Negocio?</h3>
@@ -191,7 +181,6 @@
         </div>
     </div>
 
-    <!-- Conexión con nuestro archivo de lógica -->
     <script src="app.js"></script>
 </body>
 </html>

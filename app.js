@@ -1,6 +1,6 @@
-// Configuración de conexión a tu Supabase (Mismos accesos oficiales)
+// Configuración de conexión a tu Supabase (Accesos Oficiales de Encuéntralo PZO)
 const SUPABASE_URL = 'https://xhgsxguqivqmkmbphgfm.supabase.co'; 
-const SUPABASE_KEY = 'sb_publishable_ttX_2zAlp3GGNAqzeLUnAA_3Za4rFSf'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZ3N4Z3VxaXZxbWttYnBoZ2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjMwMzYsImV4cCI6MjA5NjkzOTAzNn0.BD8GToWv_sAYPWx4Rmnxzom_ebHnc0ZQNNIaViBeMd4'; 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Listado estático de referencia para los nombres de categorías base
@@ -26,316 +26,135 @@ function normalizarTextoParaFiltro(texto) {
     if (!texto) return "";
     return texto
         .toLowerCase()
-        .trim()
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, ""); // Remueve marcas de acentos de forma limpia
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
 }
 
-// Inicializador de categorías dinámicas en la página de inicio
+// PASO 1: Descargar base de datos inicial de Supabase al entrar
 async function inicializarInterfaz() {
-    negociosFiltradosEnMemoria = [];
-    if(inputBusqueda) inputBusqueda.value = ""; 
+    contenedorComercios.innerHTML = "<p style='text-align:center; color:#666; font-size:14px;'>Sincronizando comercios de Guayana...</p>";
     
-    if (contenedorComercios) {
-        contenedorComercios.innerHTML = "<p style='text-align:center; color:#666; margin-top: 20px;'>Sincronizando los rubros comerciales de la ciudad...</p>";
-    }
-
-    // Descarga preventiva en segundo plano de todos los comercios aprobados para velocidad instantánea
     try {
-        const { data, error } = await supabaseClient
+        const { data: negocios, error } = await supabaseClient
             .from('negocios')
             .select('*')
             .eq('estado', 'activo');
-            
-        if (!error && data) {
-            todosLosNegociosActivos = data;
-        }
-    } catch (e) {
-        console.error("Error cargando caché inicial:", e);
+
+        if (error) throw error;
+
+        todosLosNegociosActivos = negocios || [];
+        negociosFiltradosEnMemoria = [...todosLosNegociosActivos];
+        
+        // Renderizamos inicialmente tus hermosos botones de categorías
+        mostrarArbolCategoriasDisponibles();
+
+    } catch (err) {
+        console.error("Error de sincronización inicial:", err.message);
+        contenedorComercios.innerHTML = "<p style='text-align:center; color:red; font-size:14px;'>Error de conexión con el servidor comercial.</p>";
     }
+}
 
-    // --- CONSTRUCCIÓN DINÁMICA FILTRADA: SOLO CATEGORÍAS CON COMERCIOS REALES ---
-    let arrayCategoriasFinales = [];
-    let rubrosVistos = new Set();
-
-    // Recorremos los comercios descargados para extraer UNICAMENTE rubros que tengan tiendas reales activas
+// PASO 2: RENDERIZA TUS BOTONES OVALADOS HORIZONTALES E INYECTA EL ICONO DE PROMOCIONES EN FILA
+function mostrarArbolCategoriasDisponibles() {
+    let mapaContador = {};
+    
     todosLosNegociosActivos.forEach(negocio => {
-        if (negocio.categoria_id !== 99) {
-            const nombreBase = CATEGORIAS_BASE[negocio.categoria_id];
-            if (nombreBase && !rubrosVistos.has(nombreBase.toLowerCase())) {
-                rubrosVistos.add(nombreBase.toLowerCase());
-                arrayCategoriasFinales.push({
-                    esPersonalizada: false,
-                    id: negocio.categoria_id,
-                    nombre: nombreBase
-                });
-            }
-        } else if (negocio.categoria_nombre && negocio.categoria_nombre.trim() !== "" && negocio.categoria_nombre !== "Ninguno (Eligió del listado)") {
-            const nombrePersonalizado = negocio.categoria_nombre.trim();
-            if (!rubrosVistos.has(nombrePersonalizado.toLowerCase())) {
-                rubrosVistos.add(nombrePersonalizado.toLowerCase());
-                arrayCategoriasFinales.push({
-                    esPersonalizada: true,
-                    id: 99,
-                    nombre: nombrePersonalizado
-                });
-            }
-        }
-    });
-
-    // CORRECCIÓN SÚPER PRO: Si no hay comercios activos en todo el sistema, mostramos un mensaje limpio
-    if (arrayCategoriasFinales.length === 0) {
-        if (contenedorComercios) {
-            contenedorComercios.innerHTML = `
-                <p style='text-align:center; color:#555; margin-top:30px; font-weight:500;'>
-                    🚀 ¡El directorio inteligente está preparándose para el gran lanzamiento!<br>
-                    <span style='font-size:13px; color:#888; font-weight:normal;'>Pronto verás los primeros comercios verificados de la ciudad aquí.</span>
-                </p>`;
-        }
-        return;
-    }
-
-    // ORDEN ALFABÉTICO INTACTO: Ordenamos el arreglo de la A a la Z ignorando emojis iniciales
-    arrayCategoriasFinales.sort((a, b) => {
-        const textoA = a.nombre.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]/g, "").trim().toLowerCase();
-        const textoB = b.nombre.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]/g, "").trim().toLowerCase();
-        return textoA.localeCompare(textoB);
-    });
-
-    // Inyectamos la estructura visual exacta respetando tus colores, fuentes y tamaños de botón
-    let htmlEstructura = `
-        <div id="contenedor-bloque-categorias" style="width:100%;">
-            <p style="text-align: center; font-weight: bold; color: #555; margin: 10px 0 15px 0; font-size: 14px;">
-                Explora por categorías:
-            </p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; justify-content: center;">
-    `;
-    
-    arrayCategoriasFinales.forEach(cat => {
-        if (!cat.esPersonalizada) {
-            htmlEstructura += `
-                <button onclick="cargarNegociosDirectoPorCategoria(${cat.id})" style="padding: 10px 16px; border: none; background: white; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #333; font-size: 14px; transition: all 0.2s; border: 1px solid #eaeaea;" onmouseover="this.style.background='#007BFF'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#333';">
-                    ${cat.nombre}
-                </button>
-            `;
+        let nombreRubro = "";
+        if (negocio.categoria_id && negocio.categoria_id !== 99) {
+            nombreRubro = CATEGORIAS_BASE[negocio.categoria_id] || "Otros Rubros";
         } else {
-            htmlEstructura += `
-                <button onclick="filtrarComerciosDirectoPorRubroPersonalizado('${cat.nombre}')" style="padding: 10px 16px; border: none; background: white; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #333; font-size: 14px; transition: all 0.2s; border: 1px solid #eaeaea;" onmouseover="this.style.background='#FF5722'; this.style.color='white';" onmouseout="this.style.background='white'; this.style.color='#333';">
-                    ✨ ${cat.nombre}
-                </button>
-            `;
+            nombreRubro = negocio.categoria_nombre || "⚠️ Rubro sin clasificar";
         }
+        mapaContador[nombreRubro] = (mapaContador[nombreRubro] || 0) + 1;
     });
-    
-    htmlEstructura += `
-            </div>
+
+    // Se inyecta la cabecera idéntica a tu captura horizontal original con el botón de Promociones al lado
+    let htmlBotones = `
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <span style="font-weight: bold; color: #444; font-size: 15px;">Explora por categorías:</span>
+            <button onclick="cargarPantallaSoloPromociones()" style="background-color: #FF5722; border: none; border-radius: 25px; padding: 6px 16px; font-size: 13px; font-weight: bold; color: white; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 4px 10px rgba(255,87,34,0.25);">
+                <span>🔥 PROMOCIONES</span>
+            </button>
         </div>
-        <div id="bloque-comercios-dinamicos" style="width:100%;"></div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center; margin-top: 5px;">
     `;
     
-    if (contenedorComercios) {
-        contenedorComercios.innerHTML = htmlEstructura;
-    }
+    Object.keys(mapaContador).sort().forEach(rubro => {
+        let rubroLimpio = rubro.replace(/[\u1F00-\u1F9F]|[\u2700-\u27BF]|[\u2600-\u26FF]/g, "").trim();
+        
+        htmlBotones += `
+            <button onclick="filtrarPorRubroSeleccionado('${rubro}')" style="background-color: white; border: 1px solid #eef2f5; border-radius: 25px; padding: 10px 22px; font-size: 14px; font-weight: bold; color: #222; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);">
+                <span style="color: #FF5722;">✨</span>
+                <span>${rubroLimpio.toUpperCase()}</span>
+            </button>
+        `;
+    });
+
+    htmlBotones += '</div>';
+    contenedorComercios.innerHTML = htmlBotones;
 }
 
-// Cargar directo al hacer clic en las categorías principales raíz
-async function cargarNegociosDirectoPorCategoria(idCategoria) {
-    const bloqueComercios = document.getElementById('bloque-comercios-dinamicos');
-    if (bloqueComercios) {
-        bloqueComercios.innerHTML = "<p style='text-align:center; color:#666; margin-top: 20px;'>Cargando comercios...</p>";
-    }
+// PASO 3: Filtrar comercios al hacer clic en un rubro específico
+function filtrarPorRubroSeleccionado(nombreRubro) {
+    let filtrados = todosLosNegociosActivos.filter(negocio => {
+        let rubroTienda = (negocio.categoria_id && negocio.categoria_id !== 99) 
+            ? CATEGORIAS_BASE[negocio.categoria_id] 
+            : negocio.categoria_nombre;
+        return rubroTienda === nombreRubro;
+    });
+
+    renderizarTarjetasEnLista(filtrados, `Rubro: ${nombreRubro}`);
+}
+
+// PASO 4: Motor de búsqueda al vuelo unificado (Filtra por nombre, tags o dirección)
+function ejecutarFiltroBuscadorGeneral() {
+    const palabraClave = normalizarTextoParaFiltro(inputBusqueda.value);
     
-    const { data: negocios, error } = await supabaseClient
-        .from('negocios')
-        .select('*')
-        .eq('estado', 'activo')
-        .eq('categoria_id', idCategoria)
-        .order('nombre_negocio', { ascending: true });
-
-    mostrarTarjetasFinales(negocios, error);
-}
-
-// Cargar directo al hacer clic en un rubro dinámico personalizado
-async function filtrarComerciosDirectoPorRubroPersonalizado(nombreRubro) {
-    const bloqueComercios = document.getElementById('bloque-comercios-dinamicos');
-    if (bloqueComercios) {
-        bloqueComercios.innerHTML = "<p style='text-align:center; color:#666; margin-top: 20px;'>Filtrando rubros...</p>";
-    }
-
-    const { data: negocios, error } = await supabaseClient
-        .from('negocios')
-        .select('*')
-        .eq('estado', 'activo')
-        .eq('categoria_id', 99)
-        .eq('categoria_nombre', nombreRubro)
-        .order('nombre_negocio', { ascending: true });
-
-    mostrarTarjetasFinales(negocios, error);
-}
-
-// Búsqueda inteligente por Texto Potenciada (Enter y Botón)
-async function buscarPorTexto() {
-    if (!inputBusqueda) return;
-    const terminoOriginal = inputBusqueda.value.trim();
-    const terminoLimpio = normalizarTextoParaFiltro(terminoOriginal);
-    
-    if (terminoLimpio === "") {
-        inicializarInterfaz();
+    if (palabraClave === "") {
+        mostrarArbolCategoriasDisponibles();
         return;
     }
 
-    if (contenedorComercios) {
-        contenedorComercios.innerHTML = "<p style='text-align:center; color:#666; margin-top: 20px;'>Buscando rubros relacionados...</p>";
-    }
-
-    let negocios = [];
-    if (todosLosNegociosActivos.length > 0) {
-        negocios = todosLosNegociosActivos.filter(negocio => {
-            const nombre = normalizarTextoParaFiltro(negocio.nombre_negocio).includes(terminoLimpio);
-            const tags = normalizarTextoParaFiltro(negocio.productos_tags).includes(terminoLimpio);
-            const rubroCat = normalizarTextoParaFiltro(negocio.categoria_nombre).includes(terminoLimpio);
-            return nombre || tags || rubroCat;
-        });
-    } else {
-        const { data, error } = await supabaseClient
-            .from('negocios')
-            .select('*')
-            .eq('estado', 'activo')
-            .or(`nombre_negocio.ilike.%${terminoOriginal}%,productos_tags.ilike.%${terminoOriginal}%,categoria_nombre.ilike.%${terminoOriginal}%`);
-        if (!error && data) negocios = data;
-    }
-
-    if (!negocios || negocios.length === 0) {
-        if (contenedorComercios) {
-            contenedorComercios.innerHTML = `
-                <p style='text-align:center; color:#666; margin-top:30px;'>No encontramos resultados para "<strong>${inputBusqueda.value.trim()}</strong>".</p>
-                <div style="text-align:center; margin-top:15px;">
-                    <button onclick="inicializarInterfaz()" style="padding: 8px 15px; background:#007BFF; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Ver todo</button>
-                </div>
-            `;
-        }
-        return;
-    }
-
-    negociosFiltradosEnMemoria = negocios;
-
-    let categoriesEncontradas = [];
-    let rubrosPersonalizadosVistos = new Set();
-
-    negocios.forEach(negocio => {
-        if (negocio.categoria_id !== 99) {
-            if (!categoriesEncontradas.some(c => c.id === negocio.categoria_id)) {
-                categoriesEncontradas.push({
-                    id: negocio.categoria_id,
-                    nombre: CATEGORIAS_BASE[negocio.categoria_id],
-                    esPersonalizado: false
-                });
-            }
-        } else if (negocio.categoria_nombre && negocio.categoria_nombre.trim() !== "") {
-            const nombreNormalizado = negocio.categoria_nombre.trim();
-            if (!rubrosPersonalizadosVistos.has(nombreNormalizado.toLowerCase())) {
-                rubrosPersonalizadosVistos.add(nombreNormalizado.toLowerCase());
-                categoriesEncontradas.push({
-                    id: 99,
-                    nombre: nombreNormalizado,
-                    esPersonalizado: true
-                });
-            }
-        }
+    let resultados = todosLosNegociosActivos.filter(negocio => {
+        const nombre = normalizarTextoParaFiltro(negocio.nombre_negocio);
+        const tags = normalizarTextoParaFiltro(negocio.productos_tags);
+        const direccion = normalizarTextoParaFiltro(negocio.direccion);
+        
+        return nombre.includes(palabraClave) || tags.includes(palabraClave) || direccion.includes(palabraClave);
     });
 
-    categoriesEncontradas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    renderizarTarjetasEnLista(resultados, `Resultados para: "${inputBusqueda.value}"`);
+}
 
-    let htmlFiltroCategorias = `
-        <div id="contenedor-bloque-categorias" style="width:100%;">
-            <p style="text-align: center; font-weight: bold; color: #FF5722; margin: 10px 0 15px 0; font-size: 14px;">
-                🔍 Rubros que ofrecen "${inputBusqueda.value.trim()}":
-            </p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; justify-content: center;">
-    `;
-
-    categoriesEncontradas.forEach(cat => {
-        if (!cat.esPersonalizado) {
-            htmlFiltroCategorias += `
-                <button onclick="filtrarComerciosEnMemoriaPorCategoriaId(${cat.id})" style="padding: 10px 16px; border: none; background: #e0f2fe; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #0369a1; font-size: 14px; border: 1px solid #bae6fd;">
-                    ${cat.nombre}
-                </button>
-            `;
-        } else {
-            htmlFiltroCategorias += `
-                <button onclick="filtrarComerciosEnMemoriaPorNombreRubro('${cat.nombre}')" style="padding: 10px 16px; border: none; background: #fef3c7; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #b45309; font-size: 14px; border: 1px solid #fde68a;">
-                    ✨ ${cat.nombre}
-                </button>
-            `;
-        }
-    });
-
-    htmlFiltroCategorias += `
-            </div>
-            <div style="text-align:center; margin-bottom: 20px;">
-               <span onclick="inicializarInterfaz()" style="color:#666; font-size:12px; cursor:pointer; text-decoration:underline;">❌ Salir de la búsqueda</span>
-            </div>
+// PASO 5: Construir e inyectar las tarjetas de tiendas en el HTML
+function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
+    let htmlTarjetas = `
+        <div style="margin-top: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0; font-size: 16px; color: #444;">${tituloContexto}</h3>
+            <button onclick="mostrarArbolCategoriasDisponibles()" style="background: #e0e0e0; border: none; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer;">⬅️ Volver</button>
         </div>
-        <div id="bloque-comercios-dinamicos" style="width:100%;"></div>
+        <div style="display: flex; flex-direction: column; gap: 15px; padding-bottom: 40px;">
     `;
 
-    if (contenedorComercios) {
-        contenedorComercios.innerHTML = htmlFiltroCategorias;
-    }
-}
-
-function filtrarComerciosEnMemoriaPorCategoriaId(idCategoria) {
-    const tiendasFiltradas = negociosFiltradosEnMemoria.filter(n => n.categoria_id === idCategoria);
-    mostrarTarjetasFinales(tiendasFiltradas, null);
-}
-
-function filtrarComerciosEnMemoriaPorNombreRubro(nombreRubro) {
-    const objetivo = normalizarTextoParaFiltro(nombreRubro);
-    const tiendasFiltradas = negociosFiltradosEnMemoria.filter(n => 
-        n.categoria_id === 99 && 
-        n.categoria_nombre && 
-        normalizarTextoParaFiltro(n.categoria_nombre) === objetivo
-    );
-    mostrarTarjetasFinales(tiendasFiltradas, null);
-}
-
-function mostrarTarjetasFinales(negocios, error) {
-    const bloqueComercios = document.getElementById('bloque-comercios-dinamicos');
-    if (!bloqueComercios) return;
-
-    if (error) {
-        bloqueComercios.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar comercios.</p>";
+    if (listaNegocios.length === 0) {
+        htmlTarjetas += "<p style='text-align:center; color:#888; padding: 20px;'>No encontramos comercios que coincidan.</p></div>";
+        contenedorComercios.innerHTML = htmlTarjetas;
         return;
     }
 
-    if (!negocios || negocios.length === 0) {
-        bloqueComercios.innerHTML = "<p style='text-align:center; color:#666; margin-top:15px;'>No hay comercios activos en esta sección.</p>";
-        return;
-    }
-
-    let htmlTarjetas = '<div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px; width:100%;">';
-
-    negocios.forEach(negocio => {
-        let rubroAMostrar = "Rubro Especializado";
-        if (negocio.categoria_nombre && negocio.categoria_nombre.trim() !== "" && negocio.categoria_nombre !== "Ninguno (Eligió del listado)") {
-            rubroAMostrar = negocio.categoria_nombre;
-        } else if (CATEGORIAS_BASE[negocio.categoria_id]) {
-            rubroAMostrar = CATEGORIAS_BASE[negocio.categoria_id];
-        }
-
-        const linkMapsHTML = negocio.maps 
-            ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #007BFF; text-decoration: none; font-size: 13px; font-weight: bold;">📍 Ubicación</a>`
-            : `<span style="color: #888; font-size: 13px;">📍 Sin mapa</span>`;
-
-        const whatsappVisual = negocio.whatsapp ? `+${negocio.whatsapp}` : 'WhatsApp';
+    listaNegocios.forEach(negocio => {
+        let whatsappVisual = negocio.whatsapp;
+        let linkMapsHTML = negocio.maps 
+            ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #ff5722; font-size: 13px; font-weight: bold; text-decoration: underline;">📍 Ver Mapa</a>` 
+            : "";
 
         htmlTarjetas += `
-            <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); padding: 16px; border: 1px solid #eef2f5; display: flex; flex-direction: column; gap: 8px; cursor: pointer; max-width: 550px; margin: 0 auto; width: 100%; box-sizing: border-box; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                
+            <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; border: 1px solid #eef2f5; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; gap: 6px; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
-                    <h3 style="margin: 0; font-size: 17px; color: #222; font-weight: bold;">${negocio.nombre_negocio}</h3>
-                    <span style="background: #eef2f5; color: #4b5563; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; white-space: nowrap;">
-                        ${rubroAMostrar}
+                    <h4 style="margin: 0; font-size: 16px; color: #111;">${negocio.nombre_negocio}</h4>
+                    <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">
+                        ${(negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General")}
                     </span>
                 </div>
 
@@ -358,16 +177,48 @@ function mostrarTarjetasFinales(negocios, error) {
     });
 
     htmlTarjetas += '</div>';
-    bloqueComercios.innerHTML = htmlTarjetas;
+    contenedorComercios.innerHTML = htmlTarjetas;
 }
 
-if (btnBuscar) btnBuscar.addEventListener('click', buscarPorTexto);
-if (inputBusqueda) {
-    inputBusqueda.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            buscarPorTexto();
-        }
+// 🎯 PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA EL FORMATO EXACTO SOLICITADO
+function cargarPantallaSoloPromociones() {
+    const localesConOferta = todosLosNegociosActivos.filter(n => n.promocion_texto && n.promocion_texto.trim() !== "");
+
+    let htmlPromos = `
+        <div style="margin-top: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0; font-size: 16px; color: #dc3545; font-weight: bold;">🔥 Promociones Activas:</h3>
+            <button onclick="mostrarArbolCategoriasDisponibles()" style="background: #e0e0e0; border: none; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer;">⬅️ Volver</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;">
+    `;
+
+    if (localesConOferta.length === 0) {
+        htmlPromos += "<p style='text-align:center; color:#888; padding: 20px; font-style: italic;'>No hay promociones comerciales activas en este momento.</p></div>";
+        contenedorComercios.innerHTML = htmlPromos;
+        return;
+    }
+
+    localesConOferta.forEach(local => {
+        // Estructura exacta requerida: NOMBRE EMPRESA – PROMOCION y LINK DEL PERFIL
+        htmlPromos += `
+            <div style="background: white; border-radius: 10px; border: 1px dashed #dc3545; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px;">
+                <div style="font-size: 14px; line-height: 1.5; color: #222;">
+                    <strong style="color: #111;">${local.nombre_negocio.toUpperCase()}</strong> – <span style="font-weight: 500; color: #4a5568;">${local.promocion_texto}</span>
+                </div>
+                <div style="text-align: right; margin-top: 4px;">
+                    <a href="perfil.html?id=${local.id}" style="color: #007BFF; font-size: 13px; font-weight: bold; text-decoration: underline;">Ver Perfil de la Empresa ➡️</a>
+                </div>
+            </div>
+        `;
     });
+
+    htmlPromos += '</div>';
+    contenedorComercios.innerHTML = htmlPromos;
 }
 
+// Oyentes de Eventos para el buscador unificado
+inputBusqueda.addEventListener('input', ejecutarFiltroBuscadorGeneral);
+btnBuscar.addEventListener('click', ejecutarFiltroBuscadorGeneral);
+
+// Arranque de automatización al abrir la web
 inicializarInterfaz();
