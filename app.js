@@ -107,6 +107,7 @@ function filtrarPorRubroSeleccionado(nombreRubro) {
 }
 
 // PASO 4: Motor de búsqueda al vuelo unificado (Filtra por nombre, tags o dirección)
+// PASO 4: Motor de búsqueda REESTRUCTURADO (Categorías Primero)
 function ejecutarFiltroBuscadorGeneral() {
     const palabraClave = normalizarTextoParaFiltro(inputBusqueda.value);
     
@@ -115,15 +116,58 @@ function ejecutarFiltroBuscadorGeneral() {
         return;
     }
 
+    // 1. Filtramos los negocios que coinciden
     let resultados = todosLosNegociosActivos.filter(negocio => {
         const nombre = normalizarTextoParaFiltro(negocio.nombre_negocio);
         const tags = normalizarTextoParaFiltro(negocio.productos_tags);
         const direccion = normalizarTextoParaFiltro(negocio.direccion);
-        
         return nombre.includes(palabraClave) || tags.includes(palabraClave) || direccion.includes(palabraClave);
     });
 
-    renderizarTarjetasEnLista(resultados, `Resultados para: "${inputBusqueda.value}"`);
+    if (resultados.length === 0) {
+        contenedorComercios.innerHTML = "<p style='text-align:center; color:#888; padding: 20px;'>No encontramos comercios que coincidan con tu búsqueda.</p>";
+        return;
+    }
+
+    // 2. Extraemos categorías únicas de los resultados encontrados
+    const categoriasUnicas = [...new Set(resultados.map(n => {
+        return (n.categoria_id && n.categoria_id !== 99) ? CATEGORIAS_BASE[n.categoria_id] : n.categoria_nombre;
+    }))];
+
+    // 3. Renderizamos botones de categorías para que el usuario elija
+    let htmlBotones = `
+        <div style="margin-bottom: 20px; text-align: center;">
+            <h3 style="color: #444;">Categorías encontradas:</h3>
+            <p style="font-size: 13px; color: #666;">Selecciona una para ver los negocios:</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px;">
+    `;
+
+    categoriasUnicas.forEach(cat => {
+        htmlBotones += `
+            <button onclick="filtrarBusquedaPorCategoria('${cat}', '${inputBusqueda.value}')" 
+            style="background: white; border: 1px solid #007BFF; border-radius: 20px; padding: 8px 16px; font-weight: bold; color: #007BFF; cursor: pointer;">
+                ${cat}
+            </button>
+        `;
+    });
+    htmlBotones += `</div></div>`;
+    
+    contenedorComercios.innerHTML = htmlBotones;
+}
+
+// NUEVA FUNCIÓN AUXILIAR PARA EL FILTRO FINAL
+function filtrarBusquedaPorCategoria(catElegida, terminoBusqueda) {
+    const filtrados = todosLosNegociosActivos.filter(n => {
+        const rubro = (n.categoria_id && n.categoria_id !== 99) ? CATEGORIAS_BASE[n.categoria_id] : n.categoria_nombre;
+        const nombre = normalizarTextoParaFiltro(n.nombre_negocio);
+        const tags = normalizarTextoParaFiltro(n.productos_tags);
+        const direccion = normalizarTextoParaFiltro(n.direccion);
+        const terminoNormalizado = normalizarTextoParaFiltro(terminoBusqueda);
+        
+        return rubro === catElegida && (nombre.includes(terminoNormalizado) || tags.includes(terminoNormalizado) || direccion.includes(terminoNormalizado));
+    });
+
+    renderizarTarjetasEnLista(filtrados, `Resultados en "${catElegida}"`);
 }
 
 // PASO 5: Construir e inyectar las tarjetas de tiendas en el HTML
