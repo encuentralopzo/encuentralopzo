@@ -70,13 +70,16 @@
 
     <div class="container">
         <div class="tabs-navegacion">
-            <button id="tab-pendientes" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
-                📥 Solicitudes Nuevas <span id="badge-count-pendiente" class="tab-badge">...</span>
-            </button>
-            <button id="tab-activos" class="tab-btn" onclick="cambiarPestaña('activo')">
-                ✅ Comercios en la Web (Activos) <span id="badge-count-activo" class="tab-badge">...</span>
-            </button>
-        </div>
+    <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
+        📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span>
+    </button>
+    <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">
+        ✅ Activos <span id="badge-count-activo" class="tab-badge">...</span>
+    </button>
+    <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">
+        🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span>
+    </button>
+</div>
 
         <div class="seccion-buscador-admin">
             <label for="buscar-empresa">🔍 Buscar comercio por Nombre o RIF:</label>
@@ -185,14 +188,19 @@
         }
 
         async function actualizarContadoresDePestañas() {
-            const { data, error } = await supabaseClient.from('negocios').select('estado');
-            if (!error && data) {
-                let p = 0, a = 0;
-                data.forEach(item => { if (item.estado === 'pendiente') p++; if (item.estado === 'activo') a++; });
-                document.getElementById('badge-count-pendiente').innerText = p;
-                document.getElementById('badge-count-activo').innerText = a;
-            }
-        }
+    const { data, error } = await supabaseClient.from('negocios').select('estado');
+    if (!error && data) {
+        let p = 0, a = 0, i = 0; // p=pendiente, a=activo, i=inactivo
+        data.forEach(item => { 
+            if (item.estado === 'pendiente') p++; 
+            if (item.estado === 'activo') a++;
+            if (item.estado === 'inactivo') i++; 
+        });
+        document.getElementById('badge-count-pendiente').innerText = p;
+        document.getElementById('badge-count-activo').innerText = a;
+        document.getElementById('badge-count-inactivo').innerText = i;
+    }
+}
 
         async function cargarDatos() {
             listaContenedor.innerHTML = "<p>Actualizando registros y escaneando categorías en Guayana...</p>";
