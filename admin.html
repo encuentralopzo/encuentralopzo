@@ -128,12 +128,12 @@
         let categoriasDescubiertas = new Set();
 
         function cambiarPestaña(tipo) {
-            pestañaActual = tipo;
-            document.getElementById('tab-pendientes').classList.toggle('active', tipo === 'pendiente');
-            document.getElementById('tab-activos').classList.toggle('active', tipo === 'activo');
-            document.getElementById('buscar-empresa').value = ''; 
-            cargarDatos();
-        }
+    pestañaActual = tipo;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tipo).classList.add('active');
+    document.getElementById('buscar-empresa').value = ''; 
+    cargarDatos();
+}
 
         async function escanearCategoriasExistentes() {
             categoriasDescubiertas.clear();
@@ -311,63 +311,55 @@
         function manejarCambioSelect(select, id) { const inputLibre = document.getElementById(`edit-rubro-libre-${id}`); if (select.value === "99") inputLibre.value = ""; else if (select.value === "DINAMICA") inputLibre.value = select.options[select.selectedIndex].text.replace("✨ ", ""); else inputLibre.value = select.options[select.selectedIndex].text; }
 
         async function actualizarEstado(id, nuevoEstado) {
-            const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
-            let selectValue = document.getElementById(`edit-categoria-${id}`).value;
-            let tags = document.getElementById(`edit-tags-${id}`).value;
-            
-            // 🎯 LECTURA DINÁMICA PERFECTA DE LA PROMOCIÓN
-            let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
-            
-            const direccion = document.getElementById(`edit-direccion-${id}`).value;
-            const horario = document.getElementById(`edit-horario-${id}`).value;
-            const maps = document.getElementById(`edit-maps-${id}`).value;
-            const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
-            let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
+    const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
+    let selectValue = document.getElementById(`edit-categoria-${id}`).value;
+    let tags = document.getElementById(`edit-tags-${id}`).value;
+    
+    // 🎯 LECTURA DINÁMICA PERFECTA DE LA PROMOCIÓN
+    let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
+    
+    const direccion = document.getElementById(`edit-direccion-${id}`).value;
+    const horario = document.getElementById(`edit-horario-${id}`).value;
+    const maps = document.getElementById(`edit-maps-${id}`).value;
+    const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
+    let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
 
-            let categoriaIdFinal = 99; let categoriaNombreFinal = null;
-            if (selectValue !== "99" && selectValue !== "DINAMICA") { categoriaIdFinal = parseInt(selectValue); categoriaNombreFinal = "Ninguno (Eligió del listado)"; }
-            else { categoriaIdFinal = 99; categoriaNombreFinal = rubroLibre || null; }
+    let categoriaIdFinal = 99; let categoriaNombreFinal = null;
+    if (selectValue !== "99" && selectValue !== "DINAMICA") { 
+        categoriaIdFinal = parseInt(selectValue); 
+        categoriaNombreFinal = "Ninguno (Eligió del listado)"; 
+    } else { 
+        categoriaIdFinal = 99; 
+        categoriaNombreFinal = rubroLibre || null; 
+    }
 
-            if (!confirm("¿Confirmar cambios?")) return;
-            
-            // 🎯 INYECCIÓN DE LA COLUMNA DE PROMOCIONES ADENTRO DEL PAYLOAD DE ACTUALIZACIÓN
-            const { error } = await supabaseClient.from('negocios').update({ 
-                nombre_negocio: nombre, 
-                categoria_id: categoriaIdFinal, 
-                categoria_nombre: categoriaNombreFinal, 
-                productos_tags: tags, 
-                promocion_texto: promoTexto || null, // <- Aquí viaja seguro a tu columna 'promocion_texto'
-                direccion: direccion, 
-                horario: horario, 
-                maps: maps, 
-                whatsapp: whatsapp, 
-                fotos_urls: JSON.stringify(fotosPorNegocio[id]), 
-                estado: nuevoEstado 
-            }).eq('id', id);
+    if (!confirm("¿Confirmar cambios?")) return;
+    
+    // 🎯 INYECCIÓN DE DATOS A SUPABASE
+    const { error } = await supabaseClient.from('negocios').update({ 
+        nombre_negocio: nombre, 
+        categoria_id: categoriaIdFinal, 
+        categoria_nombre: categoriaNombreFinal, 
+        productos_tags: tags, 
+        promocion_texto: promoTexto || null,
+        direccion: direccion, 
+        horario: horario, 
+        maps: maps, 
+        whatsapp: whatsapp, 
+        fotos_urls: JSON.stringify(fotosPorNegocio[id]), 
+        estado: nuevoEstado 
+    }).eq('id', id);
 
-            if (error) {
-                alert("❌ Error en Supabase: " + error.message);
-            } else {
-                alert("✅ ¡Cambios guardados con éxito en la base de datos de Guayana!");
+    if (error) {
+        alert("❌ Error en Supabase: " + error.message);
+    } else {
+        alert("✅ ¡Cambios guardados con éxito!");
+        
+        // ESTO ES LO QUE TE FALTABA PARA QUE FUNCIONE BIEN:
+        cargarDatos(); 
+    }
+}
                 
-                // 🎯 SINCRONIZACIÓN INMEDIATA DE LA CACHÉ:
-                // Actualizamos la memoria del navegador al vuelo antes de redibujar para que la cajita no aparezca vacía
-                const indiceLocal = cacheNegociosDescargados.findIndex(n => n.id === id);
-                if (indiceLocal !== -1) {
-                    cacheNegociosDescargados[indiceLocal].promocion_texto = promoTexto;
-                    cacheNegociosDescargados[indiceLocal].nombre_negocio = nombre;
-                    cacheNegociosDescargados[indiceLocal].productos_tags = tags;
-                    cacheNegociosDescargados[indiceLocal].direccion = direccion;
-                    cacheNegociosDescargados[indiceLocal].horario = horario;
-                    cacheNegociosDescargados[indiceLocal].maps = maps;
-                    cacheNegociosDescargados[indiceLocal].whatsapp = whatsapp;
-                }
-                
-                // Volvemos a pintar la interfaz con la memoria fresca
-                inyectarTarjetasEnPantalla(cacheNegociosDescargados);
-            }
-        }
-
         async function eliminarRegistro(id) { 
             if (confirm("🚨 ¿Borrar permanentemente?")) { 
                 const { error } = await supabaseClient.from('negocios').delete().eq('id', id); 
