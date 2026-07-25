@@ -187,18 +187,42 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     }
 
     listaNegocios.forEach(negocio => {
-        let whatsappVisual = negocio.whatsapp;
+        // Escudo de limpieza
+        let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
+        if (numeroLimpio.startsWith('0')) {
+            numeroLimpio = '58' + numeroLimpio.substring(1);
+        } else if (numeroLimpio.length === 10) {
+            numeroLimpio = '58' + numeroLimpio;
+        }
+
         let linkMapsHTML = negocio.maps 
             ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #ff5722; font-size: 13px; font-weight: bold; text-decoration: underline;">📍 Ver Mapa</a>` 
             : "";
+            
+        // --- NUEVO: CÁLCULO DE CALIFICACIÓN PARA LA TARJETA ---
+        let totalVotos = negocio.total_votos || 0;
+        let sumaCalificaciones = negocio.suma_calificaciones || 0;
+        let promedio = totalVotos === 0 ? "Nuevo" : (sumaCalificaciones / totalVotos).toFixed(1);
+        
+        // Etiqueta visual: Gris si es nuevo, Dorada si tiene calificación
+        let badgeEstrella = totalVotos === 0 
+            ? `<span style="font-size: 11px; background: #f8f9fa; color: #888; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #eee;">⭐ Nuevo</span>`
+            : `<span style="font-size: 11px; background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #ffeeba;">⭐ ${promedio}</span>`;
+            
+        // Nombre del rubro limpio
+        let textoCategoria = (negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General");
 
         htmlTarjetas += `
             <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; border: 1px solid #eef2f5; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; gap: 6px; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                     <h4 style="margin: 0; font-size: 16px; color: #111;">${negocio.nombre_negocio}</h4>
-                    <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">
-                        ${(negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General")}
-                    </span>
+                    
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                        ${badgeEstrella}
+                        <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">
+                            ${textoCategoria}
+                        </span>
+                    </div>
                 </div>
 
                 <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">
@@ -211,8 +235,8 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
                         <span style="color: #007BFF; font-size: 13px; font-weight: bold; text-decoration: underline;">📄 Ver Perfil</span>
                     </div>
                     
-                    <a href="https://wa.me/${negocio.whatsapp}" target="_blank" onclick="event.stopPropagation();" style="background-color: #25D366; color: white; padding: 6px 12px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.15);">
-                        💬 ${whatsappVisual}
+                    <a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" onclick="event.stopPropagation();" style="background-color: #25D366; color: white; padding: 6px 12px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.15);">
+                        💬 +${numeroLimpio}
                     </a>
                 </div>
             </div>
@@ -223,7 +247,7 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     contenedorComercios.innerHTML = htmlTarjetas;
 }
 
-// PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA EL FORMATO EXACTO SOLICITADO
+// PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA LAS PROMOCIONES DIVIDIDAS POR SECTOR
 function cargarPantallaSoloPromociones() {
     const localesConOferta = todosLosNegociosActivos.filter(n => n.promocion_texto && n.promocion_texto.trim() !== "");
 
@@ -232,18 +256,24 @@ function cargarPantallaSoloPromociones() {
             <h3 style="margin:0; font-size: 16px; color: #dc3545; font-weight: bold;">🔥 Promociones Activas:</h3>
             <button onclick="mostrarArbolCategoriasDisponibles()" style="background: #e0e0e0; border: none; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer;">⬅️ Volver</button>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px;">
     `;
 
     if (localesConOferta.length === 0) {
-        htmlPromos += "<p style='text-align:center; color:#888; padding: 20px; font-style: italic;'>No hay promociones comerciales activas en este momento.</p></div>";
+        htmlPromos += "<p style='text-align:center; color:#888; padding: 20px; font-style: italic;'>No hay promociones comerciales activas en este momento.</p>";
         contenedorComercios.innerHTML = htmlPromos;
         return;
     }
 
-    localesConOferta.forEach(local => {
-        htmlPromos += `
-            <div style="background: white; border-radius: 10px; border: 1px dashed #dc3545; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px;">
+    // Filtramos las promociones según el sector
+    const promosSanFelix = localesConOferta.filter(n => n.sector === 'San Félix');
+    const promosPuertoOrdaz = localesConOferta.filter(n => n.sector === 'Puerto Ordaz');
+    const promosSinSector = localesConOferta.filter(n => !n.sector || (n.sector !== 'San Félix' && n.sector !== 'Puerto Ordaz'));
+
+    // Función rápida para dibujar las tarjetas sin repetir código
+    const generarTarjetas = (lista) => {
+        if (lista.length === 0) return `<p style="color:#888; font-size:13px; font-style:italic;">No hay promociones activas en esta zona hoy.</p>`;
+        return lista.map(local => `
+            <div style="background: white; border-radius: 10px; border: 1px dashed #dc3545; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
                 <div style="font-size: 14px; line-height: 1.5; color: #222;">
                     <strong style="color: #111;">${local.nombre_negocio.toUpperCase()}</strong> – <span style="font-weight: 500; color: #4a5568;">${local.promocion_texto}</span>
                 </div>
@@ -251,10 +281,38 @@ function cargarPantallaSoloPromociones() {
                     <a href="perfil.html?id=${local.id}" style="color: #007BFF; font-size: 13px; font-weight: bold; text-decoration: underline;">Ver Perfil de la Empresa ➡️</a>
                 </div>
             </div>
-        `;
-    });
+        `).join('');
+    };
 
-    htmlPromos += '</div>';
+    // Contenedor flexible (mitad y mitad)
+    htmlPromos += `
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; padding-bottom: 20px;">
+            <!-- Columna Izquierda: San Félix -->
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin: 0 0 12px 0; color: #111; border-bottom: 2px solid #dc3545; padding-bottom: 5px; font-size: 15px;">📍 San Félix</h4>
+                ${generarTarjetas(promosSanFelix)}
+            </div>
+
+            <!-- Columna Derecha: Puerto Ordaz -->
+            <div style="flex: 1; min-width: 250px;">
+                <h4 style="margin: 0 0 12px 0; color: #111; border-bottom: 2px solid #dc3545; padding-bottom: 5px; font-size: 15px;">📍 Puerto Ordaz</h4>
+                ${generarTarjetas(promosPuertoOrdaz)}
+            </div>
+        </div>
+    `;
+
+    // Por seguridad, si hay negocios viejos que aún no tienen sector asignado, los mostramos abajo para que no queden ocultos
+    if (promosSinSector.length > 0) {
+        htmlPromos += `
+            <div style="padding-bottom: 40px;">
+                <h4 style="margin: 0 0 12px 0; color: #666; border-bottom: 2px solid #ccc; padding-bottom: 5px; font-size: 15px;">📍 Otras Zonas</h4>
+                ${generarTarjetas(promosSinSector)}
+            </div>
+        `;
+    } else {
+        htmlPromos += `<div style="padding-bottom: 40px;"></div>`;
+    }
+
     contenedorComercios.innerHTML = htmlPromos;
 }
 

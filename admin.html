@@ -31,7 +31,7 @@
         .input-buscar-admin:focus { border-color: #007BFF; box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); }
         .panel-categorias-control { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2f5; }
         .panel-categorias-control h3 { margin: 0 0 10px 0; font-size: 16px; color: #111; display: flex; align-items: center; gap: 6px; }
-        .wrapper-lista-categorias { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 5px; margin-top: 12px; }
+        .wrapper-lista-categorias { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
         .fila-categoria-gestion { display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #edf2f7; }
         .fila-categoria-gestion input { flex: 1; padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
         .btn-cat-mod { padding: 8px 14px; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; color: white; }
@@ -70,23 +70,28 @@
 
     <div class="container">
         <div class="tabs-navegacion">
-    <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
-        📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span>
-    </button>
-    <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">
-        ✅ Activos <span id="badge-count-activo" class="tab-badge">...</span>
-    </button>
-    <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">
-        🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span>
-    </button>
-</div>
+            <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
+                📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span>
+            </button>
+            <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">
+                ✅ Activos <span id="badge-count-activo" class="tab-badge">...</span>
+            </button>
+            <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">
+                🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span>
+            </button>
+            
+            <!-- NUEVA PESTAÑA PARA RUBROS -->
+            <button id="tab-rubros" class="tab-btn" onclick="cambiarPestaña('rubros')">
+                ✨ Moderar Rubros
+            </button>
+        </div>
 
-        <div class="seccion-buscador-admin">
+        <div id="seccion-buscador" class="seccion-buscador-admin">
             <label for="buscar-empresa">🔍 Buscar comercio por Nombre o RIF:</label>
             <input type="text" id="buscar-empresa" class="input-buscar-admin" placeholder="Escribe el nombre del local o su RIF..." oninput="filtrarComerciosAlVuelo()">
         </div>
 
-        <div class="panel-categorias-control">
+        <div id="panel-moderacion-rubros" class="panel-categorias-control" style="display: none;">
             <h3>✨ Panel de Control de Rubros Sugeridos (Moderación General)</h3>
             <span style="font-size:12px; color:#666;">Modifica o elimina de raíz los rubros creados por los comerciantes. Los cambios afectarán en masa a todos los locales asociados.</span>
             <div id="lista-categorias-gestion-box" class="wrapper-lista-categorias">
@@ -128,12 +133,35 @@
         let categoriasDescubiertas = new Set();
 
         function cambiarPestaña(tipo) {
-    pestañaActual = tipo;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tipo).classList.add('active');
-    document.getElementById('buscar-empresa').value = ''; 
-    cargarDatos();
-}
+            pestañaActual = tipo;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tipo).classList.add('active');
+            
+            // Elementos visuales a controlar
+            const buscador = document.getElementById('seccion-buscador');
+            const panelRubros = document.getElementById('panel-moderacion-rubros');
+            const listaContenedor = document.getElementById('lista-negocios');
+            const contadorTexto = document.getElementById('contador-texto');
+
+            if (tipo === 'rubros') {
+                // Si entramos a Moderar Rubros: Ocultamos la lista de negocios y mostramos el panel de rubros
+                buscador.style.display = 'none';
+                listaContenedor.style.display = 'none';
+                contadorTexto.style.display = 'none';
+                panelRubros.style.display = 'block';
+                
+                escanearCategoriasExistentes(); // Refresca los rubros al vuelo
+            } else {
+                // Si estamos en Solicitudes, Activos o Inactivos: Mostramos la lista normal
+                document.getElementById('buscar-empresa').value = ''; 
+                buscador.style.display = 'flex'; // Restauramos el flexbox
+                listaContenedor.style.display = 'block';
+                contadorTexto.style.display = 'block';
+                panelRubros.style.display = 'none'; // Ocultamos el panel de rubros
+                
+                cargarDatos(); // Carga las tarjetas de negocios
+            }
+        }
 
         async function escanearCategoriasExistentes() {
             categoriasDescubiertas.clear();
@@ -188,19 +216,19 @@
         }
 
         async function actualizarContadoresDePestañas() {
-    const { data, error } = await supabaseClient.from('negocios').select('estado');
-    if (!error && data) {
-        let p = 0, a = 0, i = 0; // p=pendiente, a=activo, i=inactivo
-        data.forEach(item => { 
-            if (item.estado === 'pendiente') p++; 
-            if (item.estado === 'activo') a++;
-            if (item.estado === 'inactivo') i++; 
-        });
-        document.getElementById('badge-count-pendiente').innerText = p;
-        document.getElementById('badge-count-activo').innerText = a;
-        document.getElementById('badge-count-inactivo').innerText = i;
-    }
-}
+            const { data, error } = await supabaseClient.from('negocios').select('estado');
+            if (!error && data) {
+                let p = 0, a = 0, i = 0; 
+                data.forEach(item => { 
+                    if (item.estado === 'pendiente') p++; 
+                    if (item.estado === 'activo') a++;
+                    if (item.estado === 'inactivo') i++; 
+                });
+                document.getElementById('badge-count-pendiente').innerText = p;
+                document.getElementById('badge-count-activo').innerText = a;
+                document.getElementById('badge-count-inactivo').innerText = i;
+            }
+        }
 
         async function cargarDatos() {
             listaContenedor.innerHTML = "<p>Actualizando registros y escaneando categorías en Guayana...</p>";
@@ -247,16 +275,54 @@
                 try { arrayFotosOriginal = JSON.parse(negocio.fotos_urls || "[]"); } catch(e) { arrayFotosOriginal = []; }
                 fotosPorNegocio[negocio.id] = arrayFotosOriginal;
 
-                let botonesFooterHTML = pestañaActual === 'pendiente' 
-                    ? `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">Eliminar Permanente</button><button class="btn-aprobar" onclick="actualizarEstado(${negocio.id}, 'activo')">🚀 Aprobar</button>`
-                    : `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">Eliminar Permanente</button><button class="btn-desactivar" onclick="actualizarEstado(${negocio.id}, 'pendiente')">Pausar</button><button class="btn-aprobar" style="background:#28a745;" onclick="actualizarEstado(${negocio.id}, 'activo')">💾 Guardar</button>`;
+                let botonesFooterHTML = '';
+                
+                if (pestañaActual === 'pendiente') {
+                    botonesFooterHTML = `
+                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
+                        <button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Aprobar (Mover a Activos)</button>
+                    `;
+                } else if (pestañaActual === 'activo') {
+                    botonesFooterHTML = `
+                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
+                        <button class="btn-desactivar" onclick="moverEstadoSolo(${negocio.id}, 'inactivo')">🚫 Pausar (Mover a Inactivos)</button>
+                        <button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar Cambios</button>
+                    `;
+                } else if (pestañaActual === 'inactivo') {
+                    botonesFooterHTML = `
+                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
+                        <button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Reactivar Negocio</button>
+                        <button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar Cambios</button>
+                    `;
+                }
 
                 const card = document.createElement('div');
-                card.className = 'card-negocio';
-                card.innerHTML = `
-                    <div class="card-header"><h3>${negocio.nombre_negocio}</h3></div>
-                    <div class="card-body">
-                        <div class="form-edit-group"><label>Nombre:</label><input type="text" id="edit-nombre-${negocio.id}" value="${negocio.nombre_negocio}"></div>
+            card.className = 'card-negocio';
+            
+            // 1. Limpiamos cualquier carácter extraño
+            let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
+            
+            // 2. Escudo inteligente para Venezuela: Corrige si el usuario olvidó el 58
+            if (numeroLimpio.startsWith('0')) {
+                // Si puso "04141234567", le quitamos el 0 y le ponemos 58 -> "584141234567"
+                numeroLimpio = '58' + numeroLimpio.substring(1);
+            } else if (numeroLimpio.length === 10) {
+                // Si puso "4141234567" directo, le agregamos el 58
+                numeroLimpio = '58' + numeroLimpio;
+            }
+            
+            // 3. Renderizamos el botón con el número perfectamente formateado
+            const btnAdminWhatsapp = (numeroLimpio && numeroLimpio.length >= 11) ? 
+                `<a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" style="background-color: #25D366; color: white; padding: 6px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(37,211,102,0.3);">💬 Contactar Local</a>` 
+                : `<span style="font-size: 12px; color: #dc3545; font-weight: bold;">⚠️ Número Inválido</span>`;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3>${negocio.nombre_negocio}</h3>
+                    ${btnAdminWhatsapp}
+                </div>
+                <div class="card-body">
+                    <div class="form-edit-group"><label>Nombre:</label><input type="text" id="edit-nombre-${negocio.id}" value="${negocio.nombre_negocio}"></div>
                         <div class="seccion-categorias">
                             <div class="form-edit-group"><label>Rubro Existente:</label><select id="edit-categoria-${negocio.id}" onchange="manejarCambioSelect(this, ${negocio.id})">${opcionesHTML}</select></div>
                             <div class="form-edit-group"><label>Nuevo Rubro:</label><input type="text" id="edit-rubro-libre-${negocio.id}" value="${rubroSugeridoCliente}"></div>
@@ -268,10 +334,21 @@
                             <input type="text" id="edit-promocion-${negocio.id}" placeholder="Ej: 2X1 EN CORTE DE CABELLO POR TAN SOLO 5$" value="${negocio.promocion_texto || ''}">
                         </div>
 
-                        <div class="form-edit-group"><label>Dirección:</label><input type="text" id="edit-direccion-${negocio.id}" value="${negocio.direccion}"></div>
+                        <!-- NUEVO SELECTOR DE SECTOR -->
+                        <div class="form-edit-group">
+                            <label>Sector:</label>
+                            <select id="edit-sector-${negocio.id}">
+                                <option value="" ${!negocio.sector ? 'selected' : ''}>-- Sin Especificar --</option>
+                                <option value="Puerto Ordaz" ${negocio.sector === 'Puerto Ordaz' ? 'selected' : ''}>Puerto Ordaz</option>
+                                <option value="San Félix" ${negocio.sector === 'San Félix' ? 'selected' : ''}>San Félix</option>
+                            </select>
+                        </div>
+
+                        <div class="form-edit-group"><label>Dirección:</label><input type="text" id="edit-direccion-${negocio.id}" value="${negocio.direccion || ''}"></div>
                         <div class="form-edit-group"><label>Horario:</label><input type="text" id="edit-horario-${negocio.id}" value="${negocio.horario || ''}"></div>
                         <div class="form-edit-group"><label>Maps:</label><input type="text" id="edit-maps-${negocio.id}" value="${negocio.maps || ''}"></div>
-                        <div class="form-edit-group"><label>WhatsApp:</label><input type="text" id="edit-whatsapp-${negocio.id}" value="${negocio.whatsapp}"></div>
+                        <div class="form-edit-group"><label>WhatsApp:</label><input type="text" id="edit-whatsapp-${negocio.id}" value="${negocio.whatsapp || ''}"></div>
+                        <div class="form-edit-group"><label>Instagram:</label><input type="text" id="edit-instagram-${negocio.id}" value="${negocio.instagram || ''}"></div>
                         <div class="fotos-revision">
                             <div id="grid-fotos-${negocio.id}" style="display:flex; gap:10px; flex-wrap:wrap; width:100%;"></div>
                             <div class="herramientas-fotos">
@@ -310,56 +387,69 @@
         function agregarFotoURL(idNegocio) { const input = document.getElementById(`input-nueva-foto-${idNegocio}`); if(input.value.trim()) { fotosPorNegocio[idNegocio].push(input.value.trim()); renderizarFotosGrid(idNegocio); input.value=""; } }
         function manejarCambioSelect(select, id) { const inputLibre = document.getElementById(`edit-rubro-libre-${id}`); if (select.value === "99") inputLibre.value = ""; else if (select.value === "DINAMICA") inputLibre.value = select.options[select.selectedIndex].text.replace("✨ ", ""); else inputLibre.value = select.options[select.selectedIndex].text; }
 
-        async function actualizarEstado(id, nuevoEstado) {
-    const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
-    let selectValue = document.getElementById(`edit-categoria-${id}`).value;
-    let tags = document.getElementById(`edit-tags-${id}`).value;
-    
-    // 🎯 LECTURA DINÁMICA PERFECTA DE LA PROMOCIÓN
-    let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
-    
-    const direccion = document.getElementById(`edit-direccion-${id}`).value;
-    const horario = document.getElementById(`edit-horario-${id}`).value;
-    const maps = document.getElementById(`edit-maps-${id}`).value;
-    const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
-    let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
+        // FUNCIÓN 1: EXCLUSIVA PARA MOVER EL NEGOCIO DE PESTAÑA (SOLO CAMBIA EL ESTADO)
+        async function moverEstadoSolo(id, nuevoEstado) {
+            if (!confirm(`¿Confirmas que deseas mover este negocio a ${nuevoEstado.toUpperCase()}?`)) return;
+            
+            const { error } = await supabaseClient.from('negocios').update({ estado: nuevoEstado }).eq('id', id);
+            
+            if (error) {
+                alert("❌ Error al mover: " + error.message);
+            } else {
+                alert(`✅ Negocio movido a ${nuevoEstado.toUpperCase()} correctamente.`);
+                cargarDatos(); 
+            }
+        }
 
-    let categoriaIdFinal = 99; let categoriaNombreFinal = null;
-    if (selectValue !== "99" && selectValue !== "DINAMICA") { 
-        categoriaIdFinal = parseInt(selectValue); 
-        categoriaNombreFinal = "Ninguno (Eligió del listado)"; 
-    } else { 
-        categoriaIdFinal = 99; 
-        categoriaNombreFinal = rubroLibre || null; 
-    }
+        // FUNCIÓN 2: EXCLUSIVA PARA GUARDAR LA EDICIÓN DE TEXTOS, PROMOCIONES Y FOTOS
+        async function guardarTextos(id) {
+            const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
+            let selectValue = document.getElementById(`edit-categoria-${id}`).value;
+            let tags = document.getElementById(`edit-tags-${id}`).value;
+            
+            let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
+            
+            const sector = document.getElementById(`edit-sector-${id}`).value; // <--- NUEVA LÍNEA
+            const direccion = document.getElementById(`edit-direccion-${id}`).value;
+            const horario = document.getElementById(`edit-horario-${id}`).value;
+            const maps = document.getElementById(`edit-maps-${id}`).value;
+            const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
+            const instagram = document.getElementById(`edit-instagram-${id}`) ? document.getElementById(`edit-instagram-${id}`).value.trim() : '';
+            let rubroLibre = document.getElementById(`edit-rubro-libre-${id}`).value.trim();
 
-    if (!confirm("¿Confirmar cambios?")) return;
-    
-    // 🎯 INYECCIÓN DE DATOS A SUPABASE
-    const { error } = await supabaseClient.from('negocios').update({ 
-        nombre_negocio: nombre, 
-        categoria_id: categoriaIdFinal, 
-        categoria_nombre: categoriaNombreFinal, 
-        productos_tags: tags, 
-        promocion_texto: promoTexto || null,
-        direccion: direccion, 
-        horario: horario, 
-        maps: maps, 
-        whatsapp: whatsapp, 
-        fotos_urls: JSON.stringify(fotosPorNegocio[id]), 
-        estado: nuevoEstado 
-    }).eq('id', id);
+            let categoriaIdFinal = 99; let categoriaNombreFinal = null;
+            if (selectValue !== "99" && selectValue !== "DINAMICA") { 
+                categoriaIdFinal = parseInt(selectValue); 
+                categoriaNombreFinal = "Ninguno (Eligió del listado)"; 
+            } else { 
+                categoriaIdFinal = 99; 
+                categoriaNombreFinal = rubroLibre || null; 
+            }
 
-    if (error) {
-        alert("❌ Error en Supabase: " + error.message);
-    } else {
-        alert("✅ ¡Cambios guardados con éxito!");
-        
-        // ESTO ES LO QUE TE FALTABA PARA QUE FUNCIONE BIEN:
-        cargarDatos(); 
-    }
-}
-                
+            if (!confirm("¿Guardar las modificaciones de texto y fotos?")) return;
+            
+            const { error } = await supabaseClient.from('negocios').update({ 
+                nombre_negocio: nombre, 
+                categoria_id: categoriaIdFinal, 
+                categoria_nombre: categoriaNombreFinal, 
+                productos_tags: tags, 
+                promocion_texto: promoTexto || null,
+                sector: sector, // <--- NUEVA LÍNEA
+                direccion: direccion, 
+                horario: horario, 
+                maps: maps, 
+                whatsapp: whatsapp, 
+                instagram: instagram,
+                fotos_urls: JSON.stringify(fotosPorNegocio[id])
+            }).eq('id', id);
+
+            if (error) {
+                alert("❌ Error en Supabase al guardar textos: " + error.message);
+            } else {
+                alert("✅ ¡Datos actualizados con éxito!");
+            }
+        }
+
         async function eliminarRegistro(id) { 
             if (confirm("🚨 ¿Borrar permanentemente?")) { 
                 const { error } = await supabaseClient.from('negocios').delete().eq('id', id); 

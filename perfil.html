@@ -34,6 +34,28 @@
         }
         .modal-contenido { max-width: 90%; max-height: 80vh; border-radius: 8px; object-fit: contain; }
         .modal-cerrar { position: absolute; top: 20px; right: 25px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; }
+
+        .btn-nav-visor {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            color: white; font-size: 35px; font-weight: bold; cursor: pointer;
+            user-select: none; padding: 10px; z-index: 10000;
+            background: rgba(0,0,0,0.5); border-radius: 50%;
+            width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
+            transition: background 0.3s;
+        }
+        .btn-nav-visor:hover { background: rgba(0,0,0,0.8); }
+        .btn-nav-left { left: 20px; }
+        .btn-nav-right { right: 20px; }
+        
+        /* Aseguramos que la imagen no cierre el modal al darle clic por error */
+        .modal-contenido { cursor: default; }
+
+        /* Sistema Dinámico de Estrellas */
+        .clasificacion { direction: rtl; unicode-bidi: bidi-override; display: inline-block; }
+        .clasificacion-estrella { font-size: 38px; color: #ddd; cursor: pointer; transition: 0.2s; display: inline-block; padding: 0 2px; }
+        .clasificacion-estrella:hover,
+        .clasificacion-estrella:hover ~ .clasificacion-estrella { color: #FFD700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+
     </style>
 </head>
 <body>
@@ -44,7 +66,15 @@
 
     <div id="mi-visor-modal" class="modal-visor" onclick="cerrarVistaGrande()">
         <span class="modal-cerrar" onclick="cerrarVistaGrande()">&times;</span>
-        <img class="modal-contenido" id="img-modal-grande" src="" alt="Vista ampliada">
+        
+        <!-- Flecha Izquierda -->
+        <div class="btn-nav-visor btn-nav-left" onclick="cambiarFotoModal(-1, event)">&#10094;</div>
+        
+        <!-- Imagen Central protegida contra clics accidentales -->
+        <img class="modal-contenido" id="img-modal-grande" src="" alt="Vista ampliada" onclick="event.stopPropagation()">
+        
+        <!-- Flecha Derecha -->
+        <div class="btn-nav-visor btn-nav-right" onclick="cambiarFotoModal(1, event)">&#10095;</div>
     </div>
 
     <script src="perfil.js"></script>

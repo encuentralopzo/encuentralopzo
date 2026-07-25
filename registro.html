@@ -110,6 +110,15 @@
             </div>
 
             <div class="form-group">
+                <label for="sector">🏙️ Sector de Ubicación:</label>
+                <select id="sector" required>
+                    <option value="" disabled selected>-- Elige el sector --</option>
+                    <option value="Puerto Ordaz">Puerto Ordaz</option>
+                    <option value="San Félix">San Félix</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="direccion">📍 Dirección Física Resumida (Ciudad Guayana):</label>
                 <input type="text" id="direccion" placeholder="Ej: CC Alta Vista II, Puerto Ordaz" required>
             </div>
@@ -294,6 +303,7 @@
             const valorSelect = selectCategoria.value;
             const rubroSugeridoTexto = inputNuevaCat.value.trim();
             const tags = document.getElementById('productos_tags').value.trim();
+            const sector = document.getElementById('sector').value;
             const direccion = document.getElementById('direccion').value.trim();
             const horario = document.getElementById('horario').value.trim();
             const maps = document.getElementById('maps').value.trim();
@@ -321,7 +331,7 @@
                     .insert([{
                         nombre_negocio: nombre, rif_o_id: rif,
                         categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal,
-                        productos_tags: tags, direccion: direccion, maps: maps,
+                        productos_tags: tags, sector: sector, direccion: direccion, maps: maps, // <--- SECTOR AGREGADO AQUÍ
                         horario: horario, whatsapp: whatsapp, instagram: instagram,
                         fotos_urls: stringJSONFotos, estado: 'pendiente'
                     }]);
