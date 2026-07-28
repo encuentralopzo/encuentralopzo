@@ -28,10 +28,7 @@
         @media (max-width: 768px) { .info-container { grid-template-columns: 1fr; margin: 40px auto; } }
         .info-box { background: white; border-radius: 14px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #eef2f5; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
         .info-box h3 { margin: 0 0 15px 0; color: #222; font-size: 18px; }
-        
-        /* Mantenido el tamaño grande, proporcional y expandido sin cortes */
         .info-img { width: 100%; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
-        
         .info-box p { font-size: 14px; color: #666; line-height: 1.5; margin: 0 0 20px 0; }
         .btn-registrar { display: inline-block; background: linear-gradient(135deg, #28a745, #218838); color: white; padding: 12px 24px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2); transition: transform 0.2s; }
         .btn-registrar:hover { transform: translateY(-1px); }
@@ -49,9 +46,12 @@
         <button id="btn-buscar" class="search-btn">Buscar</button>
     </div>
 
-    <!-- NUEVO: Botón de registro centrado debajo del buscador -->
-    <div style="text-align: center; margin-top: -10px; margin-bottom: 25px;">
+    <!-- Botones Principales (Registro y Rifa) -->
+    <div style="text-align: center; margin-top: -10px; margin-bottom: 25px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; padding: 0 10px;">
         <a href="registro.html" class="btn-registrar">Registra tu Comercio Aquí</a>
+        
+        <!-- ESTE ES EL BOTÓN QUE EL ADMIN CONTROLA (Nace oculto) -->
+        <button id="btn-lanzar-sorteo" onclick="abrirModalSorteo()" style="display: none; background: linear-gradient(135deg, #3190ee, #4e05ec); color: white; border: none; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 12px rgba(255,87,34,0.25); cursor: pointer; transition: transform 0.2s;">🎁 Participar en el Sorteo</button>
     </div>
 
     <div id="resultados-busqueda" class="lista-container"></div>
@@ -74,6 +74,43 @@
             <div>
                 <a href="registro.html" class="btn-registrar">Registra tu Comercio Aquí</a>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL SORTEO -->
+    <div id="modal-sorteo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; border: 1px solid #eef2f5;">
+            <span onclick="cerrarModalSorteo()" style="position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; cursor: pointer; color: #666;">&times;</span>
+            <h2 style="margin-top: 0; margin-bottom: 5px; color: #222; font-size: 22px; border-bottom: 2px solid #007BFF; padding-bottom: 10px;">🎁 Gran Sorteo</h2>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Regístrate con tus datos reales para participar.</p>
+            
+            <form id="form-sorteo">
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #4b5563;">🎟️ Número de Ticket (000 al 999):</label>
+                    <select id="sorteo-numero" required style="padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; font-weight: bold; color: #007BFF; outline: none; width: 100%; box-sizing: border-box; background-color: #f8fafc;">
+                        <option value="" disabled selected>⏳ Cargando tickets disponibles...</option>
+                    </select>
+                    <span style="font-size: 11px; color: #888;">*Solo se muestran los números que aún nadie ha tomado.</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #4b5563;">🆔 Cédula de Identidad:</label>
+                    <input type="text" id="sorteo-cedula" placeholder="Ej: V-12345678" required style="padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #4b5563;">👤 Nombre:</label>
+                    <input type="text" id="sorteo-nombre" required style="padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #4b5563;">👤 Apellido:</label>
+                    <input type="text" id="sorteo-apellido" required style="padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 25px;">
+                    <label style="font-size: 14px; font-weight: bold; color: #4b5563;">📱 Número de Contacto:</label>
+                    <input type="text" id="sorteo-telefono" placeholder="Ej: 04141234567" required style="padding: 11px 14px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 15px; outline: none; width: 100%; box-sizing: border-box;">
+                </div>
+                <button type="submit" id="btn-submit-sorteo" style="width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #0056b3, #00a2ff); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 86, 179, 0.25);">🚀 Asegurar mi Ticket</button>
+            </form>
         </div>
     </div>
 

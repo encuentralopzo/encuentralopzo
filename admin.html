@@ -8,19 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; padding: 0; background-color: #f4f6f9; color: #333;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f6f9; color: #333; }
         .header-admin { background: #111; color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .header-admin h1 { margin: 0; font-size: 24px; color: #FF5722; }
         .header-admin p { margin: 5px 0 0 0; color: #aaa; font-size: 14px; }
         .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
-        .tabs-navegacion { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .tab-btn {
-            padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px 8px 0 0;
-            cursor: pointer; background-color: #e0e0e0; color: #555; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
-        }
+        .tabs-navegacion { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #ddd; padding-bottom: 10px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px 8px 0 0; cursor: pointer; background-color: #e0e0e0; color: #555; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
         .tab-btn.active { background-color: #007BFF; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.2); }
         .tab-badge { background-color: rgba(0, 0, 0, 0.1); color: #333; padding: 2px 8px; border-radius: 12px; font-size: 13px; font-weight: bold; }
         .tab-btn.active .tab-badge { background-color: white; color: #007BFF; }
@@ -56,7 +50,6 @@
         .btn-aprobar { background: #007BFF; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
         .btn-desactivar { background: #ff9800; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
         .btn-rechazar { background: #dc3545; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-        #bloqueo { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; color: white; display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 24px; }
     </style>
 </head>
 <body>
@@ -65,13 +58,9 @@
         <div style="background: white; padding: 35px 30px; border-radius: 12px; text-align: center; max-width: 350px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             <h2 style="color: #FF5722; margin: 0 0 5px 0; font-size: 22px;">ENCUÉNTRALO PZO</h2>
             <p style="color: #666; font-size: 14px; margin-bottom: 20px;">Acceso restringido para administradores</p>
-            
             <input type="email" id="admin-email" placeholder="Correo electrónico" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none;">
-            
             <input type="password" id="admin-pass" placeholder="Contraseña segura" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; box-sizing: border-box; outline: none;">
-            
             <button id="btn-login" onclick="iniciarSesionAdmin()" style="width: 100%; padding: 14px; background: #007BFF; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; transition: background 0.3s;">Ingresar al Panel</button>
-            
             <p id="login-error" style="color: #dc3545; font-size: 13px; font-weight: bold; margin-top: 15px; display: none;">❌ Credenciales incorrectas.</p>
         </div>
     </div>
@@ -83,20 +72,11 @@
 
     <div class="container">
         <div class="tabs-navegacion">
-            <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">
-                📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span>
-            </button>
-            <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">
-                ✅ Activos <span id="badge-count-activo" class="tab-badge">...</span>
-            </button>
-            <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">
-                🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span>
-            </button>
-            
-            <!-- NUEVA PESTAÑA PARA RUBROS -->
-            <button id="tab-rubros" class="tab-btn" onclick="cambiarPestaña('rubros')">
-                ✨ Moderar Rubros
-            </button>
+            <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span></button>
+            <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">✅ Activos <span id="badge-count-activo" class="tab-badge">...</span></button>
+            <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span></button>
+            <button id="tab-rubros" class="tab-btn" onclick="cambiarPestaña('rubros')">✨ Moderar Rubros</button>
+            <button id="tab-sorteos" class="tab-btn" onclick="cambiarPestaña('sorteos')">🎁 Sorteos</button>
         </div>
 
         <div id="seccion-buscador" class="seccion-buscador-admin">
@@ -105,10 +85,36 @@
         </div>
 
         <div id="panel-moderacion-rubros" class="panel-categorias-control" style="display: none;">
-            <h3>✨ Panel de Control de Rubros Sugeridos (Moderación General)</h3>
-            <span style="font-size:12px; color:#666;">Modifica o elimina de raíz los rubros creados por los comerciantes. Los cambios afectarán en masa a todos los locales asociados.</span>
-            <div id="lista-categorias-gestion-box" class="wrapper-lista-categorias">
-                <p style="font-size:12px; color:#888; font-style:italic;">Analizando rubros en la base de datos...</p>
+            <h3>✨ Panel de Control de Rubros Sugeridos</h3>
+            <span style="font-size:12px; color:#666;">Modifica o elimina de raíz los rubros creados por los comerciantes.</span>
+            <div id="lista-categorias-gestion-box" class="wrapper-lista-categorias"></div>
+        </div>
+
+        <!-- PANEL DE SORTEOS PRO -->
+        <div id="panel-sorteos" class="panel-categorias-control" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f5; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0; font-size: 18px;">🎁 Sorteo (000 al 999)</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btn-toggle-sorteo" onclick="alternarEstadoSorteo()" style="background:#6c757d; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 13px;">⏳ Cargando estado...</button>
+                    <button onclick="descargarExcelSorteo()" style="background:#28a745; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 13px;">📊 Excel</button>
+                    <button onclick="borrarTodoSorteo()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 13px;">🗑️ Borrado Total</button>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; font-size: 13px; text-align: left;">
+                    <thead>
+                        <tr style="background: #eef2f5;">
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Ticket</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Cédula</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Cliente</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Teléfono</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body-sorteos">
+                        <tr><td colspan="5" style="padding: 15px; text-align: center; color: #888;">Cargando...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -117,8 +123,6 @@
     </div>
 
     <script>
-        
-
         const SUPABASE_URL = 'https://xhgsxguqivqmkmbphgfm.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZ3N4Z3VxaXZxbWttYnBoZ2ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjMwMzYsImV4cCI6MjA5NjkzOTAzNn0.BD8GToWv_sAYPWx4Rmnxzom_ebHnc0ZQNNIaViBeMd4'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -132,13 +136,9 @@
         let cacheNegociosDescargados = []; 
 
         const CATEGORIAS_BASE_NOMBRES = {
-            1: "🍰 Pastelerías y Reposterías",
-            2: "🍔 Restaurantes y Comida Rápida",
-            3: "🛠️ Ferreterías y Construcción",
-            4: "🏍️ Repuestos y Mecánica",
-            5: "🛍️ Tiendas de Ropa y Calzado"
+            1: "🍰 Pastelerías y Reposterías", 2: "🍔 Restaurantes y Comida Rápida",
+            3: "🛠️ Ferreterías y Construcción", 4: "🏍️ Repuestos y Mecánica", 5: "🛍️ Tiendas de Ropa y Calzado"
         };
-
         let categoriasDescubiertas = new Set();
 
         function cambiarPestaña(tipo) {
@@ -146,43 +146,40 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tipo).classList.add('active');
             
-            // Elementos visuales a controlar
             const buscador = document.getElementById('seccion-buscador');
             const panelRubros = document.getElementById('panel-moderacion-rubros');
-            const listaContenedor = document.getElementById('lista-negocios');
-            const contadorTexto = document.getElementById('contador-texto');
+            const panelSorteos = document.getElementById('panel-sorteos');
+            const listaContenedorDiv = document.getElementById('lista-negocios');
+            const contador = document.getElementById('contador-texto');
+
+            buscador.style.display = 'none';
+            listaContenedorDiv.style.display = 'none';
+            contador.style.display = 'none';
+            panelRubros.style.display = 'none';
+            panelSorteos.style.display = 'none';
 
             if (tipo === 'rubros') {
-                // Si entramos a Moderar Rubros: Ocultamos la lista de negocios y mostramos el panel de rubros
-                buscador.style.display = 'none';
-                listaContenedor.style.display = 'none';
-                contadorTexto.style.display = 'none';
                 panelRubros.style.display = 'block';
-                
-                escanearCategoriasExistentes(); // Refresca los rubros al vuelo
+                escanearCategoriasExistentes();
+            } else if (tipo === 'sorteos') {
+                panelSorteos.style.display = 'block';
+                cargarSorteosAdmin();
             } else {
-                // Si estamos en Solicitudes, Activos o Inactivos: Mostramos la lista normal
                 document.getElementById('buscar-empresa').value = ''; 
-                buscador.style.display = 'flex'; // Restauramos el flexbox
-                listaContenedor.style.display = 'block';
-                contadorTexto.style.display = 'block';
-                panelRubros.style.display = 'none'; // Ocultamos el panel de rubros
-                
-                cargarDatos(); // Carga las tarjetas de negocios
+                buscador.style.display = 'flex';
+                listaContenedorDiv.style.display = 'block';
+                contador.style.display = 'block';
+                cargarDatos(); 
             }
         }
 
         async function escanearCategoriasExistentes() {
             categoriasDescubiertas.clear();
-            const { data, error } = await supabaseClient
-                .from('negocios')
-                .select('categoria_nombre')
-                .not('categoria_nombre', 'is', null);
-
+            const { data, error } = await supabaseClient.from('negocios').select('categoria_nombre').not('categoria_nombre', 'is', null);
             if (!error && data) {
                 data.forEach(row => {
                     const texto = row.categoria_nombre.trim();
-                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") { categoriasDescubiertas.add(texto); }
+                    if (texto !== "" && texto !== "Ninguno (Eligió del listado)") categoriasDescubiertas.add(texto);
                 });
             }
             renderizarModuloGestionCategorias();
@@ -191,7 +188,7 @@
         function renderizarModuloGestionCategorias() {
             if (!contenedorGestionCategorias) return;
             if (categoriasDescubiertas.size === 0) {
-                contenedorGestionCategorias.innerHTML = "<p style='font-size:12px; color:#999; font-style:italic;'>No hay rubros personalizados sugeridos en el sistema actualmente.</p>";
+                contenedorGestionCategorias.innerHTML = "<p style='font-size:12px; color:#999; font-style:italic;'>No hay rubros personalizados.</p>";
                 return;
             }
             let listaOrdenada = Array.from(categoriasDescubiertas).sort((a,b) => a.localeCompare(b));
@@ -201,7 +198,7 @@
                     <div class="fila-categoria-gestion">
                         <input type="text" id="input-global-cat-${index}" value="${nombreCat}">
                         <button class="btn-cat-mod btn-cat-update" onclick="renombrarCategoriaGlobalInMass('${nombreCat}', ${index})">✏️ Renombrar en Masa</button>
-                        <button class="btn-cat-mod btn-cat-delete" onclick="eliminarCategoriaGlobalInMass('${nombreCat}')">🗑️ Eliminar Rubro</button>
+                        <button class="btn-cat-mod btn-cat-delete" onclick="eliminarCategoriaGlobalInMass('${nombreCat}')">🗑️ Eliminar</button>
                     </div>
                 `;
             });
@@ -210,16 +207,14 @@
 
         async function renombrarCategoriaGlobalInMass(nombreViejo, indexInput) {
             const nuevoNombre = document.getElementById(`input-global-cat-${indexInput}`).value.trim();
-            if (!nuevoNombre) return alert("🚨 El nombre no puede estar vacío.");
-            if (nuevoNombre === nombreViejo) return;
-            if (!confirm(`¿Renombrar "${nombreViejo}" a "${nuevoNombre}" en masa?`)) return;
-
+            if (!nuevoNombre || nuevoNombre === nombreViejo) return;
+            if (!confirm(`¿Renombrar "${nombreViejo}" a "${nuevoNombre}"?`)) return;
             await supabaseClient.from('negocios').update({ categoria_nombre: nuevoNombre }).eq('categoria_id', 99).eq('categoria_nombre', nombreViejo);
             cargarDatos();
         }
 
         async function eliminarCategoriaGlobalInMass(nombreCat) {
-            if (!confirm(`🚨 ¿Eliminar rubro "${nombreCat}"? Los comercios volverán a "OTRA".`)) return;
+            if (!confirm(`🚨 ¿Eliminar rubro "${nombreCat}"?`)) return;
             await supabaseClient.from('negocios').update({ categoria_nombre: "Ninguno (Eligió del listado)" }).eq('categoria_id', 99).eq('categoria_nombre', nombreCat);
             cargarDatos();
         }
@@ -240,7 +235,7 @@
         }
 
         async function cargarDatos() {
-            listaContenedor.innerHTML = "<p>Actualizando registros y escaneando categorías en Guayana...</p>";
+            listaContenedor.innerHTML = "<p>Actualizando registros...</p>";
             await actualizarContadoresDePestañas();
             await escanearCategoriasExistentes();
 
@@ -285,65 +280,37 @@
                 fotosPorNegocio[negocio.id] = arrayFotosOriginal;
 
                 let botonesFooterHTML = '';
-                
                 if (pestañaActual === 'pendiente') {
-                    botonesFooterHTML = `
-                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
-                        <button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Aprobar (Mover a Activos)</button>
-                    `;
+                    botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Aprobar</button>`;
                 } else if (pestañaActual === 'activo') {
-                    botonesFooterHTML = `
-                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
-                        <button class="btn-desactivar" onclick="moverEstadoSolo(${negocio.id}, 'inactivo')">🚫 Pausar (Mover a Inactivos)</button>
-                        <button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar Cambios</button>
-                    `;
+                    botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-desactivar" onclick="moverEstadoSolo(${negocio.id}, 'inactivo')">🚫 Pausar</button><button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar</button>`;
                 } else if (pestañaActual === 'inactivo') {
-                    botonesFooterHTML = `
-                        <button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar Permanente</button>
-                        <button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Reactivar Negocio</button>
-                        <button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar Cambios</button>
-                    `;
+                    botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Reactivar</button><button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar</button>`;
                 }
 
-                const card = document.createElement('div');
-            card.className = 'card-negocio';
-            
-            // 1. Limpiamos cualquier carácter extraño
-            let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
-            
-            // 2. Escudo inteligente para Venezuela: Corrige si el usuario olvidó el 58
-            if (numeroLimpio.startsWith('0')) {
-                // Si puso "04141234567", le quitamos el 0 y le ponemos 58 -> "584141234567"
-                numeroLimpio = '58' + numeroLimpio.substring(1);
-            } else if (numeroLimpio.length === 10) {
-                // Si puso "4141234567" directo, le agregamos el 58
-                numeroLimpio = '58' + numeroLimpio;
-            }
-            
-            // 3. Renderizamos el botón con el número perfectamente formateado
-            const btnAdminWhatsapp = (numeroLimpio && numeroLimpio.length >= 11) ? 
-                `<a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" style="background-color: #25D366; color: white; padding: 6px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(37,211,102,0.3);">💬 Contactar Local</a>` 
-                : `<span style="font-size: 12px; color: #dc3545; font-weight: bold;">⚠️ Número Inválido</span>`;
+                let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
+                if (numeroLimpio.startsWith('0')) numeroLimpio = '58' + numeroLimpio.substring(1);
+                else if (numeroLimpio.length === 10) numeroLimpio = '58' + numeroLimpio;
+                
+                const btnAdminWhatsapp = (numeroLimpio && numeroLimpio.length >= 11) ? 
+                    `<a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" style="background-color: #25D366; color: white; padding: 6px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 5px;">💬 Contactar</a>` 
+                    : `<span style="font-size: 12px; color: #dc3545; font-weight: bold;">⚠️ Inválido</span>`;
 
-            card.innerHTML = `
-                <div class="card-header">
-                    <h3>${negocio.nombre_negocio}</h3>
-                    ${btnAdminWhatsapp}
-                </div>
-                <div class="card-body">
-                    <div class="form-edit-group"><label>Nombre:</label><input type="text" id="edit-nombre-${negocio.id}" value="${negocio.nombre_negocio}"></div>
+                const card = document.createElement('div');
+                card.className = 'card-negocio';
+                card.innerHTML = `
+                    <div class="card-header"><h3>${negocio.nombre_negocio}</h3>${btnAdminWhatsapp}</div>
+                    <div class="card-body">
+                        <div class="form-edit-group"><label>Nombre:</label><input type="text" id="edit-nombre-${negocio.id}" value="${negocio.nombre_negocio}"></div>
                         <div class="seccion-categorias">
                             <div class="form-edit-group"><label>Rubro Existente:</label><select id="edit-categoria-${negocio.id}" onchange="manejarCambioSelect(this, ${negocio.id})">${opcionesHTML}</select></div>
                             <div class="form-edit-group"><label>Nuevo Rubro:</label><input type="text" id="edit-rubro-libre-${negocio.id}" value="${rubroSugeridoCliente}"></div>
                         </div>
                         <div class="form-edit-group" style="grid-column: 1 / -1;"><label>Tags:</label><input type="text" id="edit-tags-${negocio.id}" value="${negocio.productos_tags || ''}"></div>
-                        
                         <div class="form-edit-group" style="grid-column: 1 / -1;">
-                            <label style="color: #FF5722; font-weight: bold;">🎯 Texto de Promoción / Oferta Especial (Aparece al presionar el botón del index):</label>
+                            <label style="color: #FF5722; font-weight: bold;">🎯 Texto de Promoción / Oferta Especial:</label>
                             <input type="text" id="edit-promocion-${negocio.id}" placeholder="Ej: 2X1 EN CORTE DE CABELLO POR TAN SOLO 5$" value="${negocio.promocion_texto || ''}">
                         </div>
-
-                        <!-- NUEVO SELECTOR DE SECTOR -->
                         <div class="form-edit-group">
                             <label>Sector:</label>
                             <select id="edit-sector-${negocio.id}">
@@ -352,7 +319,6 @@
                                 <option value="San Félix" ${negocio.sector === 'San Félix' ? 'selected' : ''}>San Félix</option>
                             </select>
                         </div>
-
                         <div class="form-edit-group"><label>Dirección:</label><input type="text" id="edit-direccion-${negocio.id}" value="${negocio.direccion || ''}"></div>
                         <div class="form-edit-group"><label>Horario:</label><input type="text" id="edit-horario-${negocio.id}" value="${negocio.horario || ''}"></div>
                         <div class="form-edit-group"><label>Maps:</label><input type="text" id="edit-maps-${negocio.id}" value="${negocio.maps || ''}"></div>
@@ -396,29 +362,19 @@
         function agregarFotoURL(idNegocio) { const input = document.getElementById(`input-nueva-foto-${idNegocio}`); if(input.value.trim()) { fotosPorNegocio[idNegocio].push(input.value.trim()); renderizarFotosGrid(idNegocio); input.value=""; } }
         function manejarCambioSelect(select, id) { const inputLibre = document.getElementById(`edit-rubro-libre-${id}`); if (select.value === "99") inputLibre.value = ""; else if (select.value === "DINAMICA") inputLibre.value = select.options[select.selectedIndex].text.replace("✨ ", ""); else inputLibre.value = select.options[select.selectedIndex].text; }
 
-        // FUNCIÓN 1: EXCLUSIVA PARA MOVER EL NEGOCIO DE PESTAÑA (SOLO CAMBIA EL ESTADO)
         async function moverEstadoSolo(id, nuevoEstado) {
-            if (!confirm(`¿Confirmas que deseas mover este negocio a ${nuevoEstado.toUpperCase()}?`)) return;
-            
+            if (!confirm(`¿Mover a ${nuevoEstado.toUpperCase()}?`)) return;
             const { error } = await supabaseClient.from('negocios').update({ estado: nuevoEstado }).eq('id', id);
-            
-            if (error) {
-                alert("❌ Error al mover: " + error.message);
-            } else {
-                alert(`✅ Negocio movido a ${nuevoEstado.toUpperCase()} correctamente.`);
-                cargarDatos(); 
-            }
+            if (error) alert("❌ Error: " + error.message);
+            else { alert("✅ Movido correctamente."); cargarDatos(); }
         }
 
-        // FUNCIÓN 2: EXCLUSIVA PARA GUARDAR LA EDICIÓN DE TEXTOS, PROMOCIONES Y FOTOS
         async function guardarTextos(id) {
             const nombre = document.getElementById(`edit-nombre-${id}`).value.trim();
             let selectValue = document.getElementById(`edit-categoria-${id}`).value;
             let tags = document.getElementById(`edit-tags-${id}`).value;
-            
             let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
-            
-            const sector = document.getElementById(`edit-sector-${id}`).value; // <--- NUEVA LÍNEA
+            const sector = document.getElementById(`edit-sector-${id}`).value;
             const direccion = document.getElementById(`edit-direccion-${id}`).value;
             const horario = document.getElementById(`edit-horario-${id}`).value;
             const maps = document.getElementById(`edit-maps-${id}`).value;
@@ -435,49 +391,29 @@
                 categoriaNombreFinal = rubroLibre || null; 
             }
 
-            if (!confirm("¿Guardar las modificaciones de texto y fotos?")) return;
+            if (!confirm("¿Guardar modificaciones?")) return;
             
             const { error } = await supabaseClient.from('negocios').update({ 
-                nombre_negocio: nombre, 
-                categoria_id: categoriaIdFinal, 
-                categoria_nombre: categoriaNombreFinal, 
-                productos_tags: tags, 
-                promocion_texto: promoTexto || null,
-                sector: sector, // <--- NUEVA LÍNEA
-                direccion: direccion, 
-                horario: horario, 
-                maps: maps, 
-                whatsapp: whatsapp, 
-                instagram: instagram,
-                fotos_urls: JSON.stringify(fotosPorNegocio[id])
+                nombre_negocio: nombre, categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal, 
+                productos_tags: tags, promocion_texto: promoTexto || null, sector: sector, direccion: direccion, 
+                horario: horario, maps: maps, whatsapp: whatsapp, instagram: instagram, fotos_urls: JSON.stringify(fotosPorNegocio[id])
             }).eq('id', id);
 
-            if (error) {
-                alert("❌ Error en Supabase al guardar textos: " + error.message);
-            } else {
-                alert("✅ ¡Datos actualizados con éxito!");
-            }
+            if (error) alert("❌ Error: " + error.message);
+            else alert("✅ ¡Datos actualizados!");
         }
 
         async function eliminarRegistro(id) { 
             if (confirm("🚨 ¿Borrar permanentemente?")) { 
                 const { error } = await supabaseClient.from('negocios').delete().eq('id', id); 
-                if (error) {
-                    alert("❌ ERROR: No se pudo eliminar. " + error.message);
-                } else {
-                    alert("🗑️ ¡Registro eliminado con éxito!");
-                    cargarDatos(); 
-                }
+                if (error) alert("❌ ERROR: " + error.message);
+                else { alert("🗑️ Eliminado!"); cargarDatos(); }
             } 
         }
 
         async function verificarSesion() {
-            // Verificamos si ya iniciaste sesión antes para no pedirte la clave a cada rato
             const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                document.getElementById('bloqueo-login').style.display = 'none';
-                cargarDatos();
-            }
+            if (session) { document.getElementById('bloqueo-login').style.display = 'none'; cargarDatos(); }
         }
 
         async function iniciarSesionAdmin() {
@@ -486,32 +422,99 @@
             const btn = document.getElementById('btn-login');
             const errorMsg = document.getElementById('login-error');
 
-            if (!email || !pass) {
-                errorMsg.innerText = "⚠️ Por favor ingresa correo y contraseña.";
-                errorMsg.style.display = 'block';
-                return;
-            }
+            if (!email || !pass) { errorMsg.innerText = "⚠️ Ingresa datos."; errorMsg.style.display = 'block'; return; }
+            btn.innerText = "Verificando..."; btn.disabled = true;
 
-            btn.innerText = "Verificando escudo de seguridad...";
-            btn.disabled = true;
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: pass
-            });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: pass });
 
             if (error) {
-                errorMsg.innerText = "❌ Acceso denegado. Credenciales incorrectas.";
-                errorMsg.style.display = 'block';
-                btn.innerText = "Ingresar al Panel";
-                btn.disabled = false;
+                errorMsg.innerText = "❌ Credenciales incorrectas."; errorMsg.style.display = 'block';
+                btn.innerText = "Ingresar al Panel"; btn.disabled = false;
             } else {
-                document.getElementById('bloqueo-login').style.display = 'none';
-                cargarDatos();
+                document.getElementById('bloqueo-login').style.display = 'none'; cargarDatos();
             }
         }
 
-        // En lugar de cargar los datos de golpe, iniciamos el escudo
+        // ==========================================
+        // LÓGICA DE PANEL DE SORTEOS PRO
+        // ==========================================
+        let sorteoEstaActivo = false;
+
+        async function cargarSorteosAdmin() {
+            const tbody = document.getElementById('tabla-body-sorteos');
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 15px; text-align: center; color: #888;">Cargando participantes...</td></tr>';
+            
+            const { data: config } = await supabaseClient.from('configuracion').select('sorteo_activo').eq('id', 1).single();
+            if (config) {
+                sorteoEstaActivo = config.sorteo_activo;
+                actualizarBotonToggle();
+            }
+
+            const { data, error } = await supabaseClient.from('sorteos').select('*').order('numero', { ascending: true });
+            
+            if (error) return tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: #dc3545;">Error: ${error.message}</td></tr>`;
+            if (!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="5" style="padding: 15px; text-align: center; color: #666;">Aún no hay números registrados.</td></tr>';
+            
+            let html = '';
+            data.forEach(p => {
+                const fecha = new Date(p.created_at).toLocaleDateString('es-VE', { hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 12px; font-weight: bold; color: #FF5722; font-size: 16px;">#${p.numero}</td>
+                        <td style="padding: 12px; font-weight: bold;">${p.cedula}</td>
+                        <td style="padding: 12px;">${p.nombre} ${p.apellido}</td>
+                        <td style="padding: 12px;">${p.telefono}</td>
+                        <td style="padding: 12px; color: #888;">${fecha}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function actualizarBotonToggle() {
+            const btn = document.getElementById('btn-toggle-sorteo');
+            if (sorteoEstaActivo) {
+                btn.innerText = "🔴 Desactivar Botón del Index";
+                btn.style.background = "#ff9800";
+            } else {
+                btn.innerText = "🟢 Activar Botón del Index";
+                btn.style.background = "#007BFF";
+            }
+        }
+
+        async function alternarEstadoSorteo() {
+            const nuevoEstado = !sorteoEstaActivo;
+            const { error } = await supabaseClient.from('configuracion').update({ sorteo_activo: nuevoEstado }).eq('id', 1);
+            if (!error) {
+                sorteoEstaActivo = nuevoEstado;
+                actualizarBotonToggle();
+                alert(nuevoEstado ? "✅ El botón de Sorteo ahora es VISIBLE para los clientes." : "🚫 El botón de Sorteo ha sido OCULTADO.");
+            }
+        }
+
+        async function borrarTodoSorteo() {
+            if (!confirm("🚨 ¡ADVERTENCIA EXTREMA! 🚨\n\n¿Estás absolutamente seguro de querer ELIMINAR TODOS los tickets y vaciar la rifa? Esta acción no se puede deshacer.")) return;
+            const { error } = await supabaseClient.from('sorteos').delete().not('numero', 'is', null);
+            if (error) alert("❌ Error al vaciar la rifa: " + error.message);
+            else { alert("🗑️ La base de datos del sorteo está limpia y lista para empezar de nuevo."); cargarSorteosAdmin(); }
+        }
+
+        function descargarExcelSorteo() {
+            let table = document.querySelector("#panel-sorteos table");
+            let rows = table.querySelectorAll("tr");
+            let csv = [];
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText + '"');
+                csv.push(row.join(","));
+            }
+            let csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            let link = document.createElement("a");
+            link.download = "Rifa_000_al_999.csv";
+            link.href = window.URL.createObjectURL(csvFile);
+            link.click();
+        }
+
         verificarSesion();
     </script>
 </body>

@@ -17,21 +17,15 @@ const inputBusqueda = document.getElementById('input-busqueda');
 const btnBuscar = document.getElementById('btn-buscar');
 const contenedorComercios = document.getElementById('resultados-busqueda');
 
-// Caché optimizada en memoria para búsquedas instantáneas en Guayana
+// Caché optimizada en memoria
 let todosLosNegociosActivos = [];
 let negociosFiltradosEnMemoria = [];
 
-// FUNCIÓN AUXILIAR PRO: Limpia mayúsculas, espacios y remueve acentos para evitar fallos de escritura
 function normalizarTextoParaFiltro(texto) {
     if (!texto) return "";
-    return texto
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .trim();
+    return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// PASO 1: Descargar base de datos inicial de Supabase al entrar
 async function inicializarInterfaz() {
     contenedorComercios.innerHTML = "<p style='text-align:center; color:#666; font-size:14px;'>Sincronizando comercios de Guayana...</p>";
     
@@ -46,7 +40,6 @@ async function inicializarInterfaz() {
         todosLosNegociosActivos = negocios || [];
         negociosFiltradosEnMemoria = [...todosLosNegociosActivos];
         
-        // Renderizamos inicialmente tus hermosos botones de categorías
         mostrarArbolCategoriasDisponibles();
 
     } catch (err) {
@@ -55,7 +48,6 @@ async function inicializarInterfaz() {
     }
 }
 
-// PASO 2: RENDERIZA TUS BOTONES OVALADOS HORIZONTALES E INYECTA EL ICONO DE PROMOCIONES EN FILA
 function mostrarArbolCategoriasDisponibles() {
     let mapaContador = {};
     
@@ -94,7 +86,6 @@ function mostrarArbolCategoriasDisponibles() {
     contenedorComercios.innerHTML = htmlBotones;
 }
 
-// PASO 3: Filtrar comercios al hacer clic en un rubro específico
 function filtrarPorRubroSeleccionado(nombreRubro) {
     let filtrados = todosLosNegociosActivos.filter(negocio => {
         let rubroTienda = (negocio.categoria_id && negocio.categoria_id !== 99) 
@@ -102,12 +93,9 @@ function filtrarPorRubroSeleccionado(nombreRubro) {
             : negocio.categoria_nombre;
         return rubroTienda === nombreRubro;
     });
-
     renderizarTarjetasEnLista(filtrados, `Rubro: ${nombreRubro}`);
 }
 
-// PASO 4: Motor de búsqueda al vuelo unificado (Filtra por nombre, tags o dirección)
-// PASO 4: Motor de búsqueda REESTRUCTURADO (Categorías Primero)
 function ejecutarFiltroBuscadorGeneral() {
     const palabraClave = normalizarTextoParaFiltro(inputBusqueda.value);
     
@@ -116,7 +104,6 @@ function ejecutarFiltroBuscadorGeneral() {
         return;
     }
 
-    // 1. Filtramos los negocios que coinciden
     let resultados = todosLosNegociosActivos.filter(negocio => {
         const nombre = normalizarTextoParaFiltro(negocio.nombre_negocio);
         const tags = normalizarTextoParaFiltro(negocio.productos_tags);
@@ -129,12 +116,10 @@ function ejecutarFiltroBuscadorGeneral() {
         return;
     }
 
-    // 2. Extraemos categorías únicas de los resultados encontrados
     const categoriasUnicas = [...new Set(resultados.map(n => {
         return (n.categoria_id && n.categoria_id !== 99) ? CATEGORIAS_BASE[n.categoria_id] : n.categoria_nombre;
     }))];
 
-    // 3. Renderizamos botones de categorías para que el usuario elija
     let htmlBotones = `
         <div style="margin-bottom: 20px; text-align: center;">
             <h3 style="color: #444;">Categorías encontradas:</h3>
@@ -155,7 +140,6 @@ function ejecutarFiltroBuscadorGeneral() {
     contenedorComercios.innerHTML = htmlBotones;
 }
 
-// NUEVA FUNCIÓN AUXILIAR PARA EL FILTRO FINAL
 function filtrarBusquedaPorCategoria(catElegida, terminoBusqueda) {
     const filtrados = todosLosNegociosActivos.filter(n => {
         const rubro = (n.categoria_id && n.categoria_id !== 99) ? CATEGORIAS_BASE[n.categoria_id] : n.categoria_nombre;
@@ -170,7 +154,6 @@ function filtrarBusquedaPorCategoria(catElegida, terminoBusqueda) {
     renderizarTarjetasEnLista(filtrados, `Resultados en "${catElegida}"`);
 }
 
-// PASO 5: Construir e inyectar las tarjetas de tiendas en el HTML
 function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     let htmlTarjetas = `
         <div style="margin-top: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
@@ -187,57 +170,38 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     }
 
     listaNegocios.forEach(negocio => {
-        // Escudo de limpieza
         let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
-        if (numeroLimpio.startsWith('0')) {
-            numeroLimpio = '58' + numeroLimpio.substring(1);
-        } else if (numeroLimpio.length === 10) {
-            numeroLimpio = '58' + numeroLimpio;
-        }
+        if (numeroLimpio.startsWith('0')) numeroLimpio = '58' + numeroLimpio.substring(1);
+        else if (numeroLimpio.length === 10) numeroLimpio = '58' + numeroLimpio;
 
-        let linkMapsHTML = negocio.maps 
-            ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #ff5722; font-size: 13px; font-weight: bold; text-decoration: underline;">📍 Ver Mapa</a>` 
-            : "";
+        let linkMapsHTML = negocio.maps ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #ff5722; font-size: 13px; font-weight: bold; text-decoration: underline;">📍 Ver Mapa</a>` : "";
             
-        // --- NUEVO: CÁLCULO DE CALIFICACIÓN PARA LA TARJETA ---
         let totalVotos = negocio.total_votos || 0;
         let sumaCalificaciones = negocio.suma_calificaciones || 0;
         let promedio = totalVotos === 0 ? "Nuevo" : (sumaCalificaciones / totalVotos).toFixed(1);
         
-        // Etiqueta visual: Gris si es nuevo, Dorada si tiene calificación
         let badgeEstrella = totalVotos === 0 
             ? `<span style="font-size: 11px; background: #f8f9fa; color: #888; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #eee;">⭐ Nuevo</span>`
             : `<span style="font-size: 11px; background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #ffeeba;">⭐ ${promedio}</span>`;
             
-        // Nombre del rubro limpio
         let textoCategoria = (negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General");
 
         htmlTarjetas += `
             <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; border: 1px solid #eef2f5; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; gap: 6px; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
                     <h4 style="margin: 0; font-size: 16px; color: #111;">${negocio.nombre_negocio}</h4>
-                    
                     <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
                         ${badgeEstrella}
-                        <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">
-                            ${textoCategoria}
-                        </span>
+                        <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">${textoCategoria}</span>
                     </div>
                 </div>
-
-                <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">
-                    ${negocio.direccion}
-                </p>
-
+                <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">${negocio.direccion}</p>
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap;">
                     <div style="display: flex; gap: 12px; align-items: center;">
                         ${linkMapsHTML}
                         <span style="color: #007BFF; font-size: 13px; font-weight: bold; text-decoration: underline;">📄 Ver Perfil</span>
                     </div>
-                    
-                    <a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" onclick="event.stopPropagation();" style="background-color: #25D366; color: white; padding: 6px 12px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.15);">
-                        💬 +${numeroLimpio}
-                    </a>
+                    <a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" onclick="event.stopPropagation();" style="background-color: #25D366; color: white; padding: 6px 12px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.15);">💬 +${numeroLimpio}</a>
                 </div>
             </div>
         `;
@@ -247,7 +211,6 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
     contenedorComercios.innerHTML = htmlTarjetas;
 }
 
-// PASO 6: AL HACER CLIC EN EL ICONO, MUESTRA LAS PROMOCIONES DIVIDIDAS POR SECTOR
 function cargarPantallaSoloPromociones() {
     const localesConOferta = todosLosNegociosActivos.filter(n => n.promocion_texto && n.promocion_texto.trim() !== "");
 
@@ -264,12 +227,10 @@ function cargarPantallaSoloPromociones() {
         return;
     }
 
-    // Filtramos las promociones según el sector
     const promosSanFelix = localesConOferta.filter(n => n.sector === 'San Félix');
     const promosPuertoOrdaz = localesConOferta.filter(n => n.sector === 'Puerto Ordaz');
     const promosSinSector = localesConOferta.filter(n => !n.sector || (n.sector !== 'San Félix' && n.sector !== 'Puerto Ordaz'));
 
-    // Función rápida para dibujar las tarjetas sin repetir código
     const generarTarjetas = (lista) => {
         if (lista.length === 0) return `<p style="color:#888; font-size:13px; font-style:italic;">No hay promociones activas en esta zona hoy.</p>`;
         return lista.map(local => `
@@ -284,16 +245,12 @@ function cargarPantallaSoloPromociones() {
         `).join('');
     };
 
-    // Contenedor flexible (mitad y mitad)
     htmlPromos += `
         <div style="display: flex; flex-wrap: wrap; gap: 20px; padding-bottom: 20px;">
-            <!-- Columna Izquierda: San Félix -->
             <div style="flex: 1; min-width: 250px;">
                 <h4 style="margin: 0 0 12px 0; color: #111; border-bottom: 2px solid #dc3545; padding-bottom: 5px; font-size: 15px;">📍 San Félix</h4>
                 ${generarTarjetas(promosSanFelix)}
             </div>
-
-            <!-- Columna Derecha: Puerto Ordaz -->
             <div style="flex: 1; min-width: 250px;">
                 <h4 style="margin: 0 0 12px 0; color: #111; border-bottom: 2px solid #dc3545; padding-bottom: 5px; font-size: 15px;">📍 Puerto Ordaz</h4>
                 ${generarTarjetas(promosPuertoOrdaz)}
@@ -301,7 +258,6 @@ function cargarPantallaSoloPromociones() {
         </div>
     `;
 
-    // Por seguridad, si hay negocios viejos que aún no tienen sector asignado, los mostramos abajo para que no queden ocultos
     if (promosSinSector.length > 0) {
         htmlPromos += `
             <div style="padding-bottom: 40px;">
@@ -320,3 +276,98 @@ inputBusqueda.addEventListener('input', ejecutarFiltroBuscadorGeneral);
 btnBuscar.addEventListener('click', ejecutarFiltroBuscadorGeneral);
 
 inicializarInterfaz();
+
+// ==========================================
+// MÓDULO DE SORTEOS PRO (000 al 999)
+// ==========================================
+
+async function verificarEstadoSorteo() {
+    try {
+        console.log("🔍 Consultando estado del sorteo en Supabase...");
+        
+        const { data, error } = await supabaseClient.from('configuracion').select('sorteo_activo').eq('id', 1).single();
+        
+        if (error) throw error; // Si hay error, lo atrapamos abajo
+        
+        console.log("✅ Datos recibidos de la tabla configuracion:", data);
+        
+        if (data && data.sorteo_activo === true) {
+            document.getElementById('btn-lanzar-sorteo').style.display = 'inline-block';
+            console.log("🚀 Botón de la rifa ENCENDIDO en pantalla.");
+        } else {
+            console.log("🛑 El sorteo está apagado desde el admin (sorteo_activo es false).");
+        }
+
+    } catch (error) {
+        console.error("❌ ERROR AL VERIFICAR EL SORTEO:", error.message);
+    }
+}
+
+async function abrirModalSorteo() {
+    document.getElementById('modal-sorteo').style.display = 'flex';
+    const selectNumeros = document.getElementById('sorteo-numero');
+    selectNumeros.innerHTML = '<option value="" disabled selected>⏳ Buscando números libres...</option>';
+
+    try {
+        const { data, error } = await supabaseClient.from('sorteos').select('numero');
+        if (error) throw error;
+
+        const tomados = data.map(registro => registro.numero);
+        
+        let opcionesLibres = '<option value="" disabled selected>-- Selecciona tu número de la suerte --</option>';
+        for (let i = 0; i <= 999; i++) {
+            let numTexto = i.toString().padStart(3, '0');
+            if (!tomados.includes(numTexto)) {
+                opcionesLibres += `<option value="${numTexto}">${numTexto}</option>`;
+            }
+        }
+        
+        selectNumeros.innerHTML = opcionesLibres;
+
+    } catch (err) {
+        selectNumeros.innerHTML = '<option value="" disabled selected>❌ Error al cargar. Cierra y vuelve a intentar.</option>';
+    }
+}
+
+function cerrarModalSorteo() {
+    document.getElementById('modal-sorteo').style.display = 'none';
+}
+
+document.getElementById('form-sorteo')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-sorteo');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "⏳ Asegurando tu ticket...";
+    btn.disabled = true;
+
+    const numero = document.getElementById('sorteo-numero').value;
+    const cedula = document.getElementById('sorteo-cedula').value.trim();
+    const nombre = document.getElementById('sorteo-nombre').value.trim();
+    const apellido = document.getElementById('sorteo-apellido').value.trim();
+    const telefono = document.getElementById('sorteo-telefono').value.trim();
+
+    try {
+        const { error } = await supabaseClient
+            .from('sorteos')
+            .insert([{ numero, cedula, nombre, apellido, telefono }]);
+
+        if (error) {
+            if (error.code === '23505') { 
+                throw new Error("🚨 ¡Alguien más rápido se acaba de llevar este número! Por favor, elige otro.");
+            }
+            throw error;
+        }
+
+        alert(`🎉 ¡ÉXITO! Eres el dueño del Ticket #${numero}. ¡Mucha suerte!`);
+        document.getElementById('form-sorteo').reset();
+        cerrarModalSorteo();
+    } catch (err) {
+        alert("❌ Error: " + err.message);
+        abrirModalSorteo(); 
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+});
+
+verificarEstadoSorteo();
