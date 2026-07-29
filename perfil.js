@@ -205,7 +205,7 @@ async function cargarDetalleDelNegocio() {
                 </div>
                 <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
                 <div style="margin-bottom: 25px;">
-                    <h3 style="margin: 0 0 8px 0; color: #444; font-size: 15px; font-weight: bold;">🕒 Horario de Atención</h3>
+                    <h3 style="margin: 0 0 8px 0; color: #444; font-size: 15px; font-weight: bold;">🕒 Horario de Atención y DELIVERY </h3>
                     <p style="margin: 0; color: #555; font-size: 14px; font-weight: 500;">${negocio.horario || 'Consultar horario.'}</p>
                 </div>
                 <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
