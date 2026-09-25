@@ -71,12 +71,13 @@
     </div>
 
     <div class="container">
-        <div class="tabs-navegacion">
+<div class="tabs-navegacion">
             <button id="tab-pendiente" class="tab-btn active" onclick="cambiarPestaña('pendiente')">📥 Solicitudes <span id="badge-count-pendiente" class="tab-badge">...</span></button>
             <button id="tab-activo" class="tab-btn" onclick="cambiarPestaña('activo')">✅ Activos <span id="badge-count-activo" class="tab-badge">...</span></button>
             <button id="tab-inactivo" class="tab-btn" onclick="cambiarPestaña('inactivo')">🚫 Inactivos <span id="badge-count-inactivo" class="tab-badge">...</span></button>
             <button id="tab-rubros" class="tab-btn" onclick="cambiarPestaña('rubros')">✨ Moderar Rubros</button>
             <button id="tab-sorteos" class="tab-btn" onclick="cambiarPestaña('sorteos')">🎁 Sorteos</button>
+            <button id="tab-reporte" class="tab-btn" onclick="cambiarPestaña('reporte')">📊 Lista Excel</button>
         </div>
 
         <div id="seccion-buscador" class="seccion-buscador-admin">
@@ -118,6 +119,30 @@
             </div>
         </div>
 
+<!-- PANEL DE REPORTE ACTIVOS -->
+        <div id="panel-reporte" class="panel-categorias-control" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f5; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <h3 style="margin: 0; font-size: 18px;">📊 Reporte de Negocios Activos</h3>
+                <button onclick="descargarExcelActivos()" style="background:#28a745; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size: 13px; display:flex; gap:5px; align-items:center;">
+                    📥 Descargar Excel
+                </button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; font-size: 13px; text-align: left;">
+                    <thead>
+                        <tr style="background: #eef2f5;">
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Fecha de Registro</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Nombre del Negocio</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">RIF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-body-reporte">
+                        <tr><td colspan="3" style="padding: 15px; text-align: center; color: #888;">Cargando lista...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="contador-info" id="contador-texto">Conectando...</div>
         <div id="lista-negocios"></div>
     </div>
@@ -149,6 +174,7 @@
             const buscador = document.getElementById('seccion-buscador');
             const panelRubros = document.getElementById('panel-moderacion-rubros');
             const panelSorteos = document.getElementById('panel-sorteos');
+            const panelReporte = document.getElementById('panel-reporte');
             const listaContenedorDiv = document.getElementById('lista-negocios');
             const contador = document.getElementById('contador-texto');
 
@@ -157,6 +183,7 @@
             contador.style.display = 'none';
             panelRubros.style.display = 'none';
             panelSorteos.style.display = 'none';
+            if (panelReporte) panelReporte.style.display = 'none';
 
             if (tipo === 'rubros') {
                 panelRubros.style.display = 'block';
@@ -164,6 +191,9 @@
             } else if (tipo === 'sorteos') {
                 panelSorteos.style.display = 'block';
                 cargarSorteosAdmin();
+            } else if (tipo === 'reporte') { 
+                panelReporte.style.display = 'block';
+                cargarReporteActivos();
             } else {
                 document.getElementById('buscar-empresa').value = ''; 
                 buscador.style.display = 'flex';
@@ -515,6 +545,69 @@
             link.click();
         }
 
+// ==========================================
+        // LÓGICA DE REPORTE DE ACTIVOS PRO
+        // ==========================================
+        async function cargarReporteActivos() {
+            const tbody = document.getElementById('tabla-body-reporte');
+            tbody.innerHTML = '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #888;">Cargando negocios activos...</td></tr>';
+            
+            const { data, error } = await supabaseClient
+                .from('negocios')
+                .select('created_at, nombre_negocio, rif_o_id')
+                .eq('estado', 'activo')
+                .order('created_at', { ascending: false });
+            
+            if (error) return tbody.innerHTML = `<tr><td colspan="3" style="padding: 15px; text-align: center; color: #dc3545;">Error: ${error.message}</td></tr>`;
+            if (!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #666;">No hay negocios activos.</td></tr>';
+            
+            let html = '';
+            data.forEach(n => {
+                // Configurar la fecha bonita para Venezuela
+                let fecha = 'N/A';
+                if (n.created_at) {
+                    fecha = new Date(n.created_at).toLocaleDateString('es-VE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                }
+                
+                // Si dejaron el RIF en blanco mostramos algo legible
+                let rif = n.rif_o_id && n.rif_o_id.trim() !== "" ? n.rif_o_id : 'Sin RIF/ID';
+
+                html += `
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 12px; color: #555;">${fecha}</td>
+                        <td style="padding: 12px; font-weight: bold; color: #111;">${n.nombre_negocio}</td>
+                        <td style="padding: 12px;">${rif}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function descargarExcelActivos() {
+            let table = document.querySelector("#panel-reporte table");
+            let rows = table.querySelectorAll("tr");
+            let csv = [];
+            
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) {
+                    // Limpiamos caracteres raros y envolvemos en comillas para que el Excel no se rompa
+                    let textoLimpio = cols[j].innerText.replace(/"/g, '""');
+                    row.push('"' + textoLimpio + '"');
+                }
+                csv.push(row.join(","));
+            }
+            
+            // El '\uFEFF' fuerza a Excel a detectar bien los acentos y las eñes (vital para Latinoamérica)
+            let csvContent = "\uFEFF" + csv.join("\n");
+            let csvFile = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            
+            let link = document.createElement("a");
+            link.download = "Lista_Comercios_Activos.csv";
+            link.href = window.URL.createObjectURL(csvFile);
+            link.click();
+        }
+        
         verificarSesion();
     </script>
 </body>
