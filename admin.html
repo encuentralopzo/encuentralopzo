@@ -134,6 +134,7 @@
                             <th style="padding: 12px; border-bottom: 2px solid #ddd;">Fecha de Registro</th>
                             <th style="padding: 12px; border-bottom: 2px solid #ddd;">Nombre del Negocio</th>
                             <th style="padding: 12px; border-bottom: 2px solid #ddd;">RIF</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #ddd;">Nº de Opiniones</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-body-reporte">
@@ -550,33 +551,39 @@
         // ==========================================
         async function cargarReporteActivos() {
             const tbody = document.getElementById('tabla-body-reporte');
-            tbody.innerHTML = '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #888;">Cargando negocios activos...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: #888;">Cargando negocios activos...</td></tr>';
             
+            // IMPORTANTE: Aquí asumo que la columna en tu tabla 'negocios' se llama 'cantidad_opiniones'. 
+            // Si le pusiste otro nombre (ej. 'votos', 'total_votos', 'calificaciones'), cámbialo en la línea de abajo.
             const { data, error } = await supabaseClient
                 .from('negocios')
-                .select('created_at, nombre_negocio, rif_o_id')
+                .select('created_at, nombre_negocio, rif_o_id, total_votos')
                 .eq('estado', 'activo')
                 .order('created_at', { ascending: false });
             
-            if (error) return tbody.innerHTML = `<tr><td colspan="3" style="padding: 15px; text-align: center; color: #dc3545;">Error: ${error.message}</td></tr>`;
-            if (!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #666;">No hay negocios activos.</td></tr>';
+            if (error) return tbody.innerHTML = `<tr><td colspan="4" style="padding: 15px; text-align: center; color: #dc3545;">Error: ${error.message}</td></tr>`;
+            if (!data || data.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: #666;">No hay negocios activos.</td></tr>';
             
             let html = '';
             data.forEach(n => {
-                // Configurar la fecha bonita para Venezuela
+                // Configurar la fecha bonita
                 let fecha = 'N/A';
                 if (n.created_at) {
                     fecha = new Date(n.created_at).toLocaleDateString('es-VE', { year: 'numeric', month: '2-digit', day: '2-digit' });
                 }
                 
-                // Si dejaron el RIF en blanco mostramos algo legible
+                // Si dejaron el RIF en blanco
                 let rif = n.rif_o_id && n.rif_o_id.trim() !== "" ? n.rif_o_id : 'Sin RIF/ID';
+                
+                // Asegurarnos de que si no hay opiniones, muestre 0
+                let totalOpiniones = n.total_votos || 0;
 
                 html += `
                     <tr style="border-bottom: 1px solid #edf2f7;">
                         <td style="padding: 12px; color: #555;">${fecha}</td>
                         <td style="padding: 12px; font-weight: bold; color: #111;">${n.nombre_negocio}</td>
                         <td style="padding: 12px;">${rif}</td>
+                        <td style="padding: 12px; font-weight: bold; color: #0056b3;">${totalOpiniones}</td>
                     </tr>
                 `;
             });
