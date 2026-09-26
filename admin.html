@@ -312,8 +312,8 @@
 
                 let botonesFooterHTML = '';
                 if (pestañaActual === 'pendiente') {
-                    botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Aprobar</button>`;
-                } else if (pestañaActual === 'activo') {
+    botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar</button><button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Aprobar</button>`;
+} else if (pestañaActual === 'activo') {
                     botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-desactivar" onclick="moverEstadoSolo(${negocio.id}, 'inactivo')">🚫 Pausar</button><button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar</button>`;
                 } else if (pestañaActual === 'inactivo') {
                     botonesFooterHTML = `<button class="btn-rechazar" onclick="eliminarRegistro(${negocio.id})">🗑️ Eliminar</button><button class="btn-aprobar" onclick="moverEstadoSolo(${negocio.id}, 'activo')">🚀 Reactivar</button><button class="btn-aprobar" style="background:#28a745;" onclick="guardarTextos(${negocio.id})">💾 Guardar</button>`;
