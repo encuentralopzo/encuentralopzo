@@ -186,6 +186,13 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
             
         let textoCategoria = (negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General");
 
+// NUEVO BLOQUE: Insignia de espacio para la tarjeta index
+        let badgeEspacioApp = '';
+        if (negocio.espacio) {
+            let ico = negocio.espacio === 'AL AIRE LIBRE' ? '🌳' : (negocio.espacio === 'MIXTO (Aire LIBRE & Aire ACONDICIONADO)' ? '⛅' : '🌬️');
+            badgeEspacioApp = `<span style="font-size: 11px; background: #e3f2fd; color: #0d47a1; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #bbdefb;">${ico} ${negocio.espacio}</span>`;
+        }
+
         htmlTarjetas += `
             <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; border: 1px solid #eef2f5; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; gap: 6px; position: relative;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
@@ -193,6 +200,7 @@ function renderizarTarjetasEnLista(listaNegocios, tituloContexto) {
                     <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
                         ${badgeEstrella}
                         <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">${textoCategoria}</span>
+                        ${badgeEspacioApp}
                     </div>
                 </div>
                 <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">${negocio.direccion}</p>

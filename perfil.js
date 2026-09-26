@@ -182,13 +182,27 @@ async function cargarDetalleDelNegocio() {
         bloqueCalificacionHTML += `<p style="margin: 10px 0 0 0; font-size: 14px; color: #555; font-weight: bold;">Promedio: <span style="color:#111;">${promedio} / 5</span> <span style="font-size: 12px; font-weight: normal;">(${totalVotos} opiniones)</span></p>`;
         bloqueCalificacionHTML += `</div>`;
 
+        let badgeEspacio = '';
+        if (negocio.espacio) {
+            let iconoEspacio = '🌬️';
+            if (negocio.espacio === 'AL AIRE LIBRE') iconoEspacio = '🌳';
+            if (negocio.espacio === 'MIXTO (Aire LIBRE & Aire ACONDICIONADO)') iconoEspacio = '⛅';
+            
+            badgeEspacio = `<span style="background: #eef2f5; color: #4b5563; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                ${iconoEspacio}${negocio.espacio}
+            </span>`;
+        }
+
         contenedorPerfil.innerHTML = `
             <div style="max-width: 550px; margin: 0 auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box;">
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h1 style="margin: 0 0 5px 0; font-size: 24px; color: #222; font-weight: bold;">${negocio.nombre_negocio}</h1>
-                    <span style="background: #eef2f5; color: #4b5563; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
-                        ✨ ${rubroAMostrar}
-                    </span>
+                    <div style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                        <span style="background: #eef2f5; color: #4b5563; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                            ✨ ${rubroAMostrar}
+                        </span>
+                        ${badgeEspacio}
+                    </div>
                 </div>
                 <hr style="border:0; border-top: 1px solid #eee; margin: 15px 0;">
                 ${galeriaHTML}

@@ -121,6 +121,16 @@
                 </select>
             </div>
 
+<div class="form-group">
+                <label for="espacio">🌬️ Tipo de Espacio:</label>
+                <select id="espacio" required>
+                    <option value="" disabled selected>-- Elige el tipo de espacio --</option>
+                    <option value="AL AIRE LIBRE">Al Aire Libre</option>
+                    <option value="CON AIRE ACONDICIONADO">Con Aire Acondicionado</option>
+                    <option value="MIXTO (Aire LIBRE & Aire ACONDICIONADO)">MIXTO (Aire LIBRE & Aire ACONDICIONADO)</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label for="direccion">📍 Dirección Física Resumida (Ciudad Guayana):</label>
                 <input type="text" id="direccion" placeholder="Ej: CC Alta Vista II, Puerto Ordaz" required>
@@ -307,6 +317,7 @@
             const rubroSugeridoTexto = inputNuevaCat.value.trim();
             const tags = document.getElementById('productos_tags').value.trim();
             const sector = document.getElementById('sector').value;
+            const espacio = document.getElementById('espacio').value; // NUEVA LÍNEA
             const direccion = document.getElementById('direccion').value.trim();
             const horario = document.getElementById('horario').value.trim();
             const maps = document.getElementById('maps').value.trim();
@@ -334,7 +345,7 @@
                     .insert([{
                         nombre_negocio: nombre, rif_o_id: rif,
                         categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal,
-                        productos_tags: tags, sector: sector, direccion: direccion, maps: maps, // <--- SECTOR AGREGADO AQUÍ
+                        productos_tags: tags, sector: sector, espacio: espacio, direccion: direccion, maps: maps, // <--- SECTOR AGREGADO AQUÍ
                         horario: horario, whatsapp: whatsapp, instagram: instagram,
                         fotos_urls: stringJSONFotos, estado: 'pendiente'
                     }]);

@@ -336,6 +336,17 @@
                         <div class="seccion-categorias">
                             <div class="form-edit-group"><label>Rubro Existente:</label><select id="edit-categoria-${negocio.id}" onchange="manejarCambioSelect(this, ${negocio.id})">${opcionesHTML}</select></div>
                             <div class="form-edit-group"><label>Nuevo Rubro:</label><input type="text" id="edit-rubro-libre-${negocio.id}" value="${rubroSugeridoCliente}"></div>
+                            
+                            <!-- NUEVO CAMPO: Selector de espacio en el admin -->
+                            <div class="form-edit-group" style="grid-column: 1 / -1;">
+                                <label>Tipo de Espacio:</label>
+                                <select id="edit-espacio-${negocio.id}">
+                                    <option value="" ${!negocio.espacio ? 'selected' : ''}>Sin especificar</option>
+                                    <option value="AL AIRE LIBRE" ${negocio.espacio === 'AL AIRE LIBRE' ? 'selected' : ''}>Al Aire Libre</option>
+                                    <option value="CON AIRE ACONDICIONADO" ${negocio.espacio === 'CON AIRE ACONDICIONADO' ? 'selected' : ''}>Con Aire Acondicionado</option>
+                                    <option value="MIXTO (Aire LIBRE & Aire ACONDICIONADO)" ${negocio.espacio === 'MIXTO (Aire LIBRE & Aire ACONDICIONADO)' ? 'selected' : ''}>MIXTO (Aire LIBRE & Aire ACONDICIONADO)</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-edit-group" style="grid-column: 1 / -1;"><label>Tags:</label><input type="text" id="edit-tags-${negocio.id}" value="${negocio.productos_tags || ''}"></div>
                         <div class="form-edit-group" style="grid-column: 1 / -1;">
@@ -407,6 +418,7 @@
             let promoTexto = document.getElementById(`edit-promocion-${id}`).value.trim();
             const sector = document.getElementById(`edit-sector-${id}`).value;
             const direccion = document.getElementById(`edit-direccion-${id}`).value;
+            const espacioEditado = document.getElementById(`edit-espacio-${id}`).value;
             const horario = document.getElementById(`edit-horario-${id}`).value;
             const maps = document.getElementById(`edit-maps-${id}`).value;
             const whatsapp = document.getElementById(`edit-whatsapp-${id}`).value.replace(/\s+/g, '');
@@ -426,7 +438,7 @@
             
             const { error } = await supabaseClient.from('negocios').update({ 
                 nombre_negocio: nombre, categoria_id: categoriaIdFinal, categoria_nombre: categoriaNombreFinal, 
-                productos_tags: tags, promocion_texto: promoTexto || null, sector: sector, direccion: direccion, 
+                productos_tags: tags, promocion_texto: promoTexto || null, sector: sector, espacio: espacioEditado === "" ? null : espacioEditado, direccion: direccion, 
                 horario: horario, maps: maps, whatsapp: whatsapp, instagram: instagram, fotos_urls: JSON.stringify(fotosPorNegocio[id])
             }).eq('id', id);
 
