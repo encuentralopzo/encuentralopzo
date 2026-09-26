@@ -120,24 +120,82 @@ function ejecutarFiltroBuscadorGeneral() {
         return (n.categoria_id && n.categoria_id !== 99) ? CATEGORIAS_BASE[n.categoria_id] : n.categoria_nombre;
     }))];
 
-    let htmlBotones = `
+    // 1. GENERAMOS LOS BOTONES DE LAS CATEGORÍAS ENCONTRADAS
+    let htmlContenido = `
         <div style="margin-bottom: 20px; text-align: center;">
             <h3 style="color: #444;">Categorías encontradas:</h3>
-            <p style="font-size: 13px; color: #666;">Selecciona una para ver los negocios:</p>
+            <p style="font-size: 13px; color: #666;">Selecciona una para filtrar, o mira los resultados directos abajo:</p>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px;">
     `;
 
     categoriasUnicas.forEach(cat => {
-        htmlBotones += `
+        htmlContenido += `
             <button onclick="filtrarBusquedaPorCategoria('${cat}', '${inputBusqueda.value}')" 
             style="background: white; border: 1px solid #007BFF; border-radius: 20px; padding: 8px 16px; font-weight: bold; color: #007BFF; cursor: pointer;">
                 ${cat}
             </button>
         `;
     });
-    htmlBotones += `</div></div>`;
+    htmlContenido += `</div></div>`;
     
-    contenedorComercios.innerHTML = htmlBotones;
+    // 2. AÑADIMOS LAS TARJETAS DE LOS NEGOCIOS QUE COINCIDEN INMEDIATAMENTE DEBAJO
+    htmlContenido += `
+        <div style="margin-top: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin:0; font-size: 16px; color: #444;">Resultados de la búsqueda:</h3>
+            <button onclick="mostrarArbolCategoriasDisponibles(); document.getElementById('input-busqueda').value='';" style="background: #e0e0e0; border: none; padding: 6px 12px; border-radius: 15px; font-size: 12px; font-weight: bold; cursor: pointer;">⬅️ Limpiar</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 15px; padding-bottom: 40px;">
+    `;
+
+    resultados.forEach(negocio => {
+        let numeroLimpio = negocio.whatsapp ? negocio.whatsapp.replace(/\D/g, '') : '';
+        if (numeroLimpio.startsWith('0')) numeroLimpio = '58' + numeroLimpio.substring(1);
+        else if (numeroLimpio.length === 10) numeroLimpio = '58' + numeroLimpio;
+
+        let linkMapsHTML = negocio.maps ? `<a href="${negocio.maps}" target="_blank" onclick="event.stopPropagation();" style="color: #ff5722; font-size: 13px; font-weight: bold; text-decoration: underline;">📍 Ver Mapa</a>` : "";
+            
+        let totalVotos = negocio.total_votos || 0;
+        let sumaCalificaciones = negocio.suma_calificaciones || 0;
+        let promedio = totalVotos === 0 ? "Nuevo" : (sumaCalificaciones / totalVotos).toFixed(1);
+        
+        let badgeEstrella = totalVotos === 0 
+            ? `<span style="font-size: 11px; background: #f8f9fa; color: #888; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #eee;">⭐ Nuevo</span>`
+            : `<span style="font-size: 11px; background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #ffeeba;">⭐ ${promedio}</span>`;
+            
+        let textoCategoria = (negocio.categoria_id && negocio.categoria_id !== 99) ? CATEGORIAS_BASE[negocio.categoria_id] : (negocio.categoria_nombre || "General");
+
+        let badgeEspacioApp = '';
+        if (negocio.espacio) {
+            let ico = negocio.espacio === 'AL AIRE LIBRE' ? '🌳' : (negocio.espacio === 'MIXTO (Aire LIBRE & Aire ACONDICIONADO)' ? '⛅' : '🌬️');
+            badgeEspacioApp = `<span style="font-size: 11px; background: #e3f2fd; color: #0d47a1; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap; border: 1px solid #bbdefb;">${ico} ${negocio.espacio}</span>`;
+        }
+
+        htmlContenido += `
+            <div onclick="window.location.href='perfil.html?id=${negocio.id}'" style="background: white; border-radius: 12px; border: 1px solid #eef2f5; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; gap: 6px; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                    <h4 style="margin: 0; font-size: 16px; color: #111;">${negocio.nombre_negocio}</h4>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                        ${badgeEstrella}
+                        <span style="font-size: 11px; background: #f0f4f8; color: #555; padding: 3px 8px; border-radius: 10px; font-weight: bold; white-space: nowrap;">${textoCategoria}</span>
+                        ${badgeEspacioApp}
+                    </div>
+                </div>
+                <p style="margin: 0; font-size: 13px; color: #555; line-height: 1.4;">${negocio.direccion}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        ${linkMapsHTML}
+                        <span style="color: #007BFF; font-size: 13px; font-weight: bold; text-decoration: underline;">📄 Ver Perfil</span>
+                    </div>
+                    <a href="https://api.whatsapp.com/send?phone=${numeroLimpio}" target="_blank" onclick="event.stopPropagation();" style="background-color: #25D366; color: white; padding: 6px 12px; text-decoration: none; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.15);">💬 +${numeroLimpio}</a>
+                </div>
+            </div>
+        `;
+    });
+
+    htmlContenido += '</div>';
+
+    // Inyectamos todo el HTML combinado (Botones de Categoría + Tarjetas) de una sola vez
+    contenedorComercios.innerHTML = htmlContenido;
 }
 
 function filtrarBusquedaPorCategoria(catElegida, terminoBusqueda) {
